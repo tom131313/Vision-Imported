@@ -47,21 +47,21 @@ public class AprilTagsLocations
 
         List<StructPublisher<Pose3d>> publishTagPose = new ArrayList<>(getTagCount());
         
-        Consumer<AprilTag> initializeTagAndPose = tag ->
+        Consumer<AprilTag> initializeTagPoses = tag ->
         {
             System.out.format("%s %6.1f, %6.1f, %6.1f [degrees]%n",
                 tag.toString(),
                 Units.radiansToDegrees(tag.pose.getRotation().getX()),
                 Units.radiansToDegrees(tag.pose.getRotation().getY()),
                 Units.radiansToDegrees(tag.pose.getRotation().getZ()));
-
+                // assuming there is no tag 0 so indexing starts with tag 1 in list position 0. Ugh!
                 var tagPosePublisher = tagsTable.getStructTopic("tagPose3D_" + tag.ID, Pose3d.struct).publish();
                 publishTagPose.add(tagPosePublisher);
                 publishTagPose.get(tag.ID-1).set(tag.pose); // no tag 0 so index back 1; ouch! that sequencing trick hurts!
         };
 
         System.out.println(aprilTagFieldLayout.getTags().size() + " Tags on file");
-        aprilTagFieldLayout.getTags().forEach(initializeTagAndPose);
+        aprilTagFieldLayout.getTags().forEach(initializeTagPoses);
     }
 
     public static int getTagCount()

@@ -111,7 +111,7 @@ public class AcquireRobotPose {
   
       estimator = new AprilTagPoseEstimator(poseEstConfig);
 
-      Consumer<AprilTag> initializeTagAndPose = tag ->
+      Consumer<AprilTag> initializeRobotPosePublishers = tag ->
       {
         System.out.format("%s %6.1f, %6.1f, %6.1f [degrees]%n",
               tag.toString(),
@@ -120,12 +120,10 @@ public class AcquireRobotPose {
               Units.radiansToDegrees(tag.pose.getRotation().getZ()));
 
               var robotPosePublisher = robotsTable.getStructTopic("robotPose3D_" + tag.ID, Pose3d.struct).publish();
-              publishRobotPose.set(tag.ID, robotPosePublisher);
+              publishRobotPose.add(robotPosePublisher);
       };
 
-    AprilTagsLocations.getTagsLocations().forEach(initializeTagAndPose);
-
-System.out.println("size of publishRobotPose " + publishRobotPose.size());
+    AprilTagsLocations.getTagsLocations().forEach(initializeRobotPosePublishers);
 
     // // make an empty bucket for every possible tag; assume id = 0 to count-1
     // for (int tag = 0; tag < AprilTagsLocations.getTagCount()-1; tag++) {
@@ -146,7 +144,7 @@ System.out.println("size of publishRobotPose " + publishRobotPose.size());
       for (AprilTagDetection detection : detections) {
         Pose3d tagInFieldFrame; // pose from WPILib resource or custom pose file
 
-        if(AprilTagsLocations.getTagsLocations().size() < detection.getId() && detection.getDecisionMargin() > 50.) // margin < 20 seems bad; margin > 120 are good
+        if(AprilTagsLocations.getTagsLocations().size() >= detection.getId() && detection.getDecisionMargin() > 50.) // -1 ouch!; margin < 20 seems bad; margin > 120 are good
         {
           tagInFieldFrame = AprilTagsLocations.getTagLocation(detection.getId());
         }
@@ -367,7 +365,7 @@ System.out.println("size of publishRobotPose " + publishRobotPose.size());
         SmartDashboard.putNumber("detectionDecisionMargin " + detection.getId(), detection.getDecisionMargin());
 
         // put out to NetworkTables tag and robot pose for this tag in AdvantageScope format
-        publishRobotPose.get(detection.getId()).set(robotInFieldFrame);
+        publishRobotPose.get(detection.getId() - 1).set(robotInFieldFrame); // ouch! tag 1 to 22 in list positions 0 to 21
       }
       else {
         poses.add(new RobotPose(detection.getId(), yaw, pitch, Pose3d.kZero));

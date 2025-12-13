@@ -28,13 +28,13 @@ public class RobotContainer {
     private static void configAButton()
     {
         Trigger aButton = driverController.a();
-        aButton.toggleOnTrue(new AlignToReefFieldRelativePose3D(true, visionContainer));
+        aButton.whileTrue(new AlignToReefFieldRelativePose3D(true, visionContainer));
     }
 
     private static void configBButton()
     {
         Trigger bButton = driverController.b();
-        bButton.toggleOnTrue(new AlignToReefTagRelativeArcade2D(visionContainer));
+        bButton.whileTrue(new AlignToReefTagRelativeArcade2D(visionContainer));
     }
 
     public VisionContainer getVisionContainer()
