@@ -32,10 +32,12 @@ public class VisionContainer {
   LimelightVision limelightVision;
   ControllerVision controllerVision;
 
-  // Caution select only one vision usage! There is only one pose saved per iteration!
+  // Caution! Select only one vision usage! There is only one pose saved per iteration!
+  // Each of the three Vision processes may be instantiated multiple times and
+  // all three may run at the same time but not when used with this VisionContainer.
 
-  private final boolean useControllerVision = false; // do 1 ControllerVision processing; select below camera and 3-D pose option and location
-  private final boolean usePV = true; // do 1 PhotonVision processing; select below camera name and location
+  private final boolean useControllerVision = true; // do 1 ControllerVision processing; select below camera and 3-D pose option and location
+  private final boolean usePV = false; // do 1 PhotonVision processing; select below camera name and location
   private final boolean useLL = false; // do 1 LimeLight processing; select camera name
 
   AtomicReference<RobotPose> robotPose = new AtomicReference<>(new RobotPose(-1, 0., 0., Pose3d.kZero)); // this is the current pose

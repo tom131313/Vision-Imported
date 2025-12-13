@@ -1,9 +1,19 @@
 package frc.robot;
 
 import java.lang.invoke.MethodHandles;
+import java.util.List;
+
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.IdealStartingState;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.Waypoint;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -16,7 +26,8 @@ import edu.wpi.first.wpilibj2.command.Command;
  * 
  * <p>This example uses chassis speed.
  * 
- * <p>Pick what the drivetrain interface actually needs.
+ * <p>Pick what the drivetrain interface actually needs. A dummy CTRE swerve is
+ * included to allow the PathPlanner drive-to-target to compile.
  * 
  * <p>This is an example for only one AprilTag and that is determined in the code.
  * 
@@ -145,7 +156,7 @@ public class AlignToReefFieldRelativePose3D extends Command {
 
   @Override
   public void end(boolean interrupted) {
-    driveRobotRelative(new ChassisSpeeds(0, 0, 0));
+    drivetrain.driveRobotRelative(new ChassisSpeeds(0, 0, 0));
 
     if (interrupted)
     {
@@ -160,10 +171,10 @@ public class AlignToReefFieldRelativePose3D extends Command {
         yController.atSetpoint() &&
         xController.atSetpoint()) {
         // at goal pose so stop and see if it settles
-        driveRobotRelative(new ChassisSpeeds(0, 0, 0));
+        drivetrain.driveRobotRelative(new ChassisSpeeds(0, 0, 0));
     }
     else {
-      driveRobotRelative(new ChassisSpeeds(xSpeed, ySpeed, rotValue));
+      drivetrain.driveRobotRelative(new ChassisSpeeds(xSpeed, ySpeed, rotValue));
       holdPoseValidationTimer.reset();
     }
 
@@ -188,14 +199,87 @@ public class AlignToReefFieldRelativePose3D extends Command {
     return bail || dontSeeTag || holdPose;
   }
 
-    /** Simulate (extremely badly) the drivetrain.driveRobotRelative to test this                
-     * Robot Centric Orientation (not Field centric)
-     * @param chassisSpeeds the desired robot chassis speed
-     * @return drive command
+  /*******************************************************************************************
+   * 
+   * dummy Drivetrain and SwerveDriveState classes to allow this sample PathPlanner to compile
+   */
+
+    private Drivetrain drivetrain = this.new Drivetrain();
+
+    /**
+     * Sample of PathPlanner followPath to drive to target position. It is essentially the PID
+     * controllers similar to the above command controllers and would replace the above command.
+     * <p>AutoBuilder must be configured before usage.
+     * <p>Drives autonomously from the given pose to the target pose using PathPlanner
+     * @param targetPose
+     * @param currentPose
+     * @return
+     * @author Biggie Cheese
      */
-    public void driveRobotRelative(ChassisSpeeds chassisSpeeds)
+    public /*static*/ Command driveToPositionCommand(Pose2d targetPose, Pose2d currentPose)
     {
-      // goal current speeds
-      System.out.print(" " + chassisSpeeds + " ");
+        PathConstraints constraints = new PathConstraints(2.0, 1.0, Units.degreesToRadians(360), Units.degreesToRadians(360));
+        List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
+                                    new Pose2d(currentPose.getTranslation(), currentPose.getRotation()),
+                                    new Pose2d(targetPose.getTranslation(), targetPose.getRotation()));          
+
+        double vxMetersPerSecond = drivetrain.getState().Speeds.vxMetersPerSecond;
+        double vyMetersPerSecond = drivetrain.getState().Speeds.vyMetersPerSecond;
+
+        double velocity = Math.hypot(vxMetersPerSecond, vyMetersPerSecond);
+
+        Rotation2d rotation = drivetrain.getPose().getRotation();
+
+        IdealStartingState idealStartingState = new IdealStartingState(velocity, rotation);
+
+        PathPlannerPath path = new PathPlannerPath(
+                                    waypoints,
+                                    constraints,
+                                    idealStartingState, // set this to null if not working
+                                    new GoalEndState(0.0, targetPose.getRotation()));
+        path.preventFlipping = true;
+
+        return AutoBuilder.followPath(path);
     }
+
+    private class Drivetrain
+    {
+        /** Stub to simulate (extremely badly) for testing.
+         * Robot Centric Orientation (not Field centric)
+         * @param chassisSpeeds the desired robot chassis speed
+         * @return drive command
+         */  
+        public void driveRobotRelative(ChassisSpeeds chassisSpeeds)
+        {
+          // goal current speeds
+          System.out.print(" " + chassisSpeeds + " ");
+        }
+
+        /**
+         * dummy
+         */
+        private Pose2d getPose()
+        {
+            return getState().pose;
+        }
+
+        /**
+         * dummy
+         */
+        private SwerveDriveState getState()
+        {
+            return new SwerveDriveState();          
+        }
+
+        /**
+         * dummy
+         */
+        private class SwerveDriveState
+        {
+            /** The current pose of the robot */
+            public Pose2d pose = new Pose2d();
+            /** The current robot-centric velocity */
+            public ChassisSpeeds Speeds = new ChassisSpeeds();
+        }
+   }
 }
