@@ -54,15 +54,17 @@ Vision hardware and software - partial list:
 
         Orange Pi + camera + voltage regulator
 
-    WPILib + roboRIO are "free" so why not use them? AprilTag detection is jittery and the WPILib basic algorithms don't
-    do much validation and determination of the best possible pose. PhotonVision and LimelightVision have multiple methods
-    and stable poses on the field are almost always available.
+    WPILib + roboRIO are "free" so why not use them? AprilTag detection is a little more jittery and the WPILib basic
+    algorithms don't do as much validation and determination of the best possible pose. PhotonVision and LimelightVision
+    have multiple methods and stable poses on the field are almost always available.
 
     The roboRIO v1 can do detection and pose calculation but no CPU time left for much of anything else. Limit that usage
-    to detection and turn angle to target.
+    to detection and targeting commands that turn angle to target.
 
-    WPILib + roboRIO v2 (and maybe v1) usage could be a good vision solution for "zero budget" teams to aim at nearby target
-    (better range if some pose validation is added to eliminate much of the jitter).
+    WPILib + roboRIO v2 (and maybe v1) usage could be a good vision solution for "zero budget" teams to aim at nearby targets.
+    For better range some pose validation may need to be added to eliminate some of the jitter. The robot is clamped to the
+    floor in AcquireRobotPose (that could be removed). Some teams clamp the pose rotation to the gyro which is not included
+    in this implementation but could be added. (Some teams do this for Limelight MT1; MT2 already does this.)
 
     LimelightVision is a pricey vision solution and the closest to plug-n-play that appeals to many teams.
 

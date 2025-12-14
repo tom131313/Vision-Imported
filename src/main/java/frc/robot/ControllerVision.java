@@ -19,7 +19,10 @@ import edu.wpi.first.math.geometry.Transform3d;
 /**
  * This is a demo program showing the detection of AprilTags. The image is acquired from the USB
  * camera, then any detected AprilTags are marked up on the image, transformed to the robot on
- * the field pose and sent to NetworkTables.
+ * the field pose and sent to NetworkTables. The robot pose is clamped to the floor and that could
+ * be removed in AcquireRobotPose. (LimelightVision setup has that option as set in the Limelight.)
+ * AcquireRobotPose has no provision for using the gyro to improve pose estimation. The gyro
+ * heading could be used instead of the pose rotation, if desired.
  *
  * <p>Be aware that the performance on this is much worse than a coprocessor solution!
  * 

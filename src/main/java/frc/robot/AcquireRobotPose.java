@@ -39,6 +39,7 @@ import frc.robot.Image.AcquisitionTime;
 
 /**
    * Pose estimation using WPILib math on previously detected AprilTags
+   * <p>The robot is clamped to the floor (Z = 0 and that code could be removed).
    * 
    * <p>This is intended to run in an independent thread.
    *
@@ -351,8 +352,15 @@ public class AcquireRobotPose {
         // the above transforms match LimeLight Vision botpose_wpiblue network tables entries
         // as they display in AdvantageScope 3D Field robotInFieldFrame
 
-        // end transforms to get the robot pose from this vision tag pose
+        // there is a lot of jitter at longer distances with this algorithm. Much of it is in the Z (height) axis so clamping to the floor
+        // makes the pose look better and is (usually) more accurate. It is unlikely the Z value is used except maybe for 3-D distance to
+        // a target.
+        robotInFieldFrame = robotInFieldFrame.transformBy(new Transform3d(0., 0., -robotInFieldFrame.getZ(), Rotation3d.kZero)); // clamp to floor
 
+        // similarly there may be improved accuracy by clamping to the gyro heading. Some teams use the X-Y values and get the rotation from the gyro.
+        // This class code does not do any validation or value replacement using the gyro. It could be added here or done downstream if desired.
+
+        // end transforms to get the robot pose from this vision tag pose
         poses.add(new RobotPose(detection.getId(), yaw, pitch, robotInFieldFrame));
 
         // put detection and pose information on dashboards
