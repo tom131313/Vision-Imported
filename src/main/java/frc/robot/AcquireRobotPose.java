@@ -113,14 +113,8 @@ public class AcquireRobotPose {
 
       Consumer<AprilTag> initializeRobotPosePublishers = tag ->
       {
-        System.out.format("%s %6.1f, %6.1f, %6.1f [degrees]%n",
-              tag.toString(),
-              Units.radiansToDegrees(tag.pose.getRotation().getX()),
-              Units.radiansToDegrees(tag.pose.getRotation().getY()),
-              Units.radiansToDegrees(tag.pose.getRotation().getZ()));
-
-              var robotPosePublisher = robotsTable.getStructTopic("robotPose3D_" + tag.ID, Pose3d.struct).publish();
-              publishRobotPose.add(robotPosePublisher);
+          var robotPosePublisher = robotsTable.getStructTopic("robotPose3D_" + tag.ID, Pose3d.struct).publish();
+          publishRobotPose.add(robotPosePublisher);
       };
 
     AprilTagsLocations.getTagsLocations().forEach(initializeRobotPosePublishers);

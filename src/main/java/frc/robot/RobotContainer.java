@@ -2,6 +2,8 @@ package frc.robot;
 
 import java.lang.invoke.MethodHandles;
 
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -13,6 +15,11 @@ public class RobotContainer {
         System.out.println("Loading: " + fullClassName);
     }
 
+    //FIXME options for logging
+    private boolean useConsole            = true;
+    private boolean useDataLog            = false;
+    private boolean useShuffleBoardLog    = false;
+
     private static VisionContainer visionContainer;
 
     private static final CommandXboxController driverController = new CommandXboxController(0);
@@ -20,6 +27,7 @@ public class RobotContainer {
     public RobotContainer()
     {
         dataLogConfig();
+        configureCommandLogs();
         visionContainer = new VisionContainer();
         configAButton();
         configBButton();
@@ -66,4 +74,25 @@ public class RobotContainer {
         // networkTableInstance.startEntryDataLog(dataLog, "/LiveWindow", "NT:/LiveWindow");
         // networkTableInstance.startConnectionDataLog(dataLog, "NTConnection");
     }
+
+    private CommandSchedulerLog schedulerLog;
+
+    /**
+     * Configure Command logging to Console/Terminal, DataLog, or ShuffleBoard
+     */
+    @SuppressWarnings("resource")
+    public void configureCommandLogs()
+    {
+        if (useConsole || useDataLog || useShuffleBoardLog) {
+            schedulerLog = new CommandSchedulerLog(useConsole, useDataLog, useShuffleBoardLog);
+            schedulerLog.logCommandInitialize();
+            schedulerLog.logCommandInterrupt();
+            schedulerLog.logCommandFinish();
+            schedulerLog.logCommandExecute();  // Can (optionally) generate a lot of output        
+        }
+        else {
+            new Alert("No logging", AlertType.kWarning).set(true);
+        }
+    }
+
 }
