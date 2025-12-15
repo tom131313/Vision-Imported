@@ -69,7 +69,7 @@ public class AlignToReefFieldRelativePose3D extends Command {
   private final Transform3d targetBranch; // offset from AprilTag in field pose
   Pose3d target;
   private VisionContainer visionContainer;
-  private boolean bail = false;
+  private boolean bail;
   double xSpeed;
   double ySpeed;
   double rotValue;
@@ -115,6 +115,7 @@ public class AlignToReefFieldRelativePose3D extends Command {
     holdPoseValidationTimer.start();
     dontSeeTagTimer = new Timer();
     dontSeeTagTimer.start();
+    bail = false;
     xController.reset();
     yController.reset();
     rotController.reset();

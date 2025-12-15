@@ -98,6 +98,7 @@ public class AlignToReefTagRelativeArcade2D extends Command {
         holdPoseValidationTimer.start();
         dontSeeTagTimer = new Timer();
         dontSeeTagTimer.start();
+        bail = false; 
         distanceController.reset();
         rotController.reset();
       }
@@ -114,8 +115,7 @@ public class AlignToReefTagRelativeArcade2D extends Command {
         { // no tag seen so let the countdown to failure timer run and quit this iteration
             return;
         }
-
-        bail = false;  
+ 
         if (pose.AprilTagId != tagIDDesired) // make sure still looking at the correct tag
         {
             System.out.println("Oops! Looking at wrong tag");
