@@ -1,7 +1,5 @@
 package frc.robot;
 
-import java.lang.invoke.MethodHandles;
-
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
@@ -27,10 +25,9 @@ import edu.wpi.first.wpilibj2.command.Command;
  * <p>https://docs.photonvision.org/en/latest/docs/examples/aimandrange.html
  */
 public class AlignToReefTagRelativeArcade2D extends Command {
-    private static final String fullClassName = MethodHandles.lookup().lookupClass().getCanonicalName();
     static
     {
-        System.out.println("Loading: " + fullClassName);
+        System.out.println("Loading: " + java.lang.invoke.MethodHandles.lookup().lookupClass().getCanonicalName());
     }
 
     // need to know what target is seen to know target height from floor and where scoring is relative to it
@@ -201,8 +198,18 @@ public class AlignToReefTagRelativeArcade2D extends Command {
      * That's inconsistent with camera positions that are best for 3-D pose estimation where the camera
      * should be at least a small angle to the side of a target in addition to being at different heights.
      * 
-     * <p>There must be significant height difference for this to work accurately. If it doesn't work
-     * then try a lookup table of hand measured values but that still suffers the same problem.
+     * <p>There must be significant height difference for this to work accurately. Slight jitter in the
+     * pitch causes a lot of jitter in the distance calculation (tangent function). If it doesn't work,
+     * then try a lookup table of hand measured values but that still suffers exactly the same problem.
+     * Filtering of the distance signal such as Savitzky-Golay least squares filtering might help (that's
+     * unconfirmed speculation).
+     * 
+     * A better distance measurement would come from a proper distance sensor such as the analog mode
+     * (at least for 2026) of https://swyftrobotics.com/products/swyft-ranger-distance-sensor
+     * 
+     * A distance sensor may respond more quickly than a camera - a lot of variation in the speed of
+     * cameras and distance sensors. The SWYFT is 2.5 Hz to 15 Hz which is much slower than or about
+     * as fast as cameras. PhotonVision and LimelightVision may be substantially faster than this.
      *
      * @param cameraHeight height of the camera off the floor in meters.
      * @param targetHeight height of the target off the floor in meters.
@@ -221,14 +228,20 @@ public class AlignToReefTagRelativeArcade2D extends Command {
         return (targetHeight - cameraHeight) // distance between heights
                / Math.tan(cameraPitch + targetPitch); // total angle with the floor
     }
-// // look-up-table alternative to distanceToTarget() may be slightly more accurate but much less flexible and much harder to use.
-// // It still suffers if the camera and target are at about the same height.
-// distanceToTarget = new InterpolatingDoubleTreeMap();
-// // example degrees pitch to meters distance
-// // make your measurements to put enough points for linear interpolation to be accurate
-// distanceToTarget.put(-6., 1.5);
-// distanceToTarget.put(0., 0.5);
-// distanceToTarget.put(9., 0.25);
+
+    // // look-up-table alternative to distanceToTarget() may be slightly more accurate but much less flexible and much harder to use.
+    // // It still suffers if the camera and target are at about the same height.
+    // distanceToTarget = new InterpolatingDoubleTreeMap();
+    // // example degrees pitch to meters distance
+    // // make your measurements to put enough points for linear interpolation to be accurate
+    // distanceToTarget.put(-6., 1.5);
+    // distanceToTarget.put(0., 0.5);
+    // distanceToTarget.put(9., 0.25);
+
+    // // SWYFT analog distance sensor
+    // AnalogInput distanceSensor = new AnalogInput(0);
+    // distanceToTarget =  distanceSensor.getVoltage()*32.50930976)-2.695384202);
+
 
     /** Simulate (extremely badly) the drivetrain.driveRobotRelative to test this                
      * Robot Centric Orientation (not Field centric)
@@ -240,6 +253,6 @@ public class AlignToReefTagRelativeArcade2D extends Command {
     public void driveRobotRelative(ChassisSpeeds chassisSpeeds)
     {
       // goal current speeds
-    //   System.out.print(" " + chassisSpeeds + " ");
+      //  System.out.print(" " + chassisSpeeds + " ");
     }
 }

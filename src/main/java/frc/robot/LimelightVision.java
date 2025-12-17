@@ -3,7 +3,6 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Milliseconds;
 import static edu.wpi.first.units.Units.Seconds;
 
-import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -108,10 +107,9 @@ import frc.robot.LimelightHelpers.PoseEstimate;
 </code></pre>
  */
 public class LimelightVision  extends CameraBase {
-    private static final String fullClassName = MethodHandles.lookup().lookupClass().getCanonicalName();
     static
     {
-        System.out.println("Loading: " + fullClassName);
+        System.out.println("Loading: " + java.lang.invoke.MethodHandles.lookup().lookupClass().getCanonicalName());
     }
 
     private final String limelightName; // name of the limelight
@@ -144,7 +142,7 @@ public class LimelightVision  extends CameraBase {
     private PoseEstimate MT1;
     private PoseEstimate MT2;
 
-    private LimelightVision(String limelightName) {
+    public LimelightVision(String limelightName) {
         this.limelightName = limelightName;
 
         LLtable = NTinstance.getTable(limelightName); // Get the limelight table
@@ -158,21 +156,6 @@ public class LimelightVision  extends CameraBase {
         publishRobotPoseMT2 = LLtableLog.getStructTopic("robotPose2DMT2", Pose2d.struct).publish();
         publishRobotPose2d = LLtableLog.getStructTopic("robotPose2d", Pose2d.struct).publish();
         publishRobotPose3d = LLtableLog.getStructTopic("robotPose3d", Pose3d.struct).publish();
-    }
-
-    /**
-     * Essentially the constructor for a limelight object but with validation that the LL exists
-     * @param limelightName as set in the limelight
-     * @return a limelight object or null if it doesn't exist
-     */
-    public static LimelightVision makeCamera(String limelightName)
-    {
-        if (!isAvailable(limelightName))
-        {
-            return null;
-        }
-
-        return new LimelightVision(limelightName);
     }
 
     /**

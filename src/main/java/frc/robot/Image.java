@@ -66,4 +66,3 @@ public class Image {
         protected double acquisitionTime = 0;
     }
   }
-

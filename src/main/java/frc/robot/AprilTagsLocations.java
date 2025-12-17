@@ -1,7 +1,6 @@
 package frc.robot;
 
 import java.io.IOException;
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -21,10 +20,9 @@ import edu.wpi.first.wpilibj.Filesystem;
  */
 public class AprilTagsLocations
  {      
-    private static final String fullClassName = MethodHandles.lookup().lookupClass().getCanonicalName();
     static
     {
-        System.out.println("Loading: " + fullClassName);
+        System.out.println("Loading: " + java.lang.invoke.MethodHandles.lookup().lookupClass().getCanonicalName());
     }
 
     private static AprilTagFieldLayout aprilTagFieldLayout;

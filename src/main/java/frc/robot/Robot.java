@@ -1,119 +1,111 @@
-/**
- * Presentation of three Vision routines:
- *   WPILib Vision example (known herein as ControllerVision) with a wrapper consistent with the other two wrappers
- *   Example wrapper for PhotonVision
- *   Example wrapper for LimelightVision
- * 
- * These three Vision routines each can detect AprilTags and compute a robot pose.
- * 
- * Two example uses of Vision are included as commands:
- *  1. Turn the robot to a target and drive to a specified distance from the target
- *  2. Drive the robot to a specified field position
- *     This drive command is presented in two forms:
- *      1. use of three PID controllers to achieve the target position goal
- *      2. proposed, but untested as packaged herein, PathPlanner swerve command on the fly to drive to position
- *
- *   These example commands are limited to aligning with a single selected target near AprilTag #10.
- *   Completed team code should include the true robot drivetrain odometry and a gyro is extremely useful
- *   for pose accuracy and drivability of the robot.
- * 
- * PhotonVision and LimelightVision each have examples of their usage. Most teams have Vision code; there are
- * hundreds of varieties. This code may help beginner or novice teams get started quicker.
- * 
- * <p>This code has been tested with Limelight 2+, PhotonVision 2026 beta 1 on RPi 4 B, and WPILib 2025.3.2
- * with both a roboRIO v1 and DriverStation PC simulation. Targeting commands were driven by a hand-held camera
- * without benefit of a robot. Cameras used were Microsoft LifeCam HD-3000 (USB interface) and ArduCam UC-844 Rev. B (OV9281 camera sensor; USB interface)
- */
-
-/* 
-Vision hardware and software - partial list:
-
-    roboRIO + free WPILib software (WPILib sample detection and Pose calculation from this project) + $55 camera am-5749 (different or cheaper USB cameras may work - reserve the right to return dysfunctional ones)
-        roboRIO v1 turn to angle only
-        roboRIO v2 3-D pose capability
-
-    limelightvision.io $450 integrated hardware and software
-
-    photonvision.org free software and has some hardware recommendations
-
-    https://danpeled.gitbook.io/synapse/ free vision software and has some hardware recommendations
-
-    Hardware that may run free vision software such as PhotonVision:
-
-        https://luma.vision/ $250 hardware box including camera
-
-        https://first-rubik.github.io/ $109 am-5698 RUBIK Pi 3 Vision Bundle + $55 camera am-5749 +
-            power supply https://www.pololu.com/product/4984 $19 -> https://www.amazon.com/dp/B0C8TBM2QM 2 for $17 -> USB C PD Input on RUBIK Pi
-            see https://first-rubik.github.io/docs/power
-            https://www.chiefdelphi.com/t/introducing-the-rubik-pi-3-apriltag-processing-object-detection/507648/
-            other possibilities:
-            https://www.amazon.com/DROK-Converter-Adjustable-Regulator-Transformer/dp/B0BQBXMH67?th=1
-            https://www.amazon.com/dp/B0D7942HWP?th=1
-
-        Raspberry Pi 3, 4, or 5 + $55 camera am-5749 + voltage regulator (some other USB and CSI cameras work)
-
-        Orange Pi + camera + voltage regulator
-
-    WPILib + roboRIO are "free" so why not use them? AprilTag detection is a little more jittery and the WPILib basic
-    algorithms don't do as much validation and determination of the best possible pose. PhotonVision and LimelightVision
-    have multiple methods and stable poses on the field are almost always available.
-
-    The roboRIO v1 can do detection and pose calculation but no CPU time left for much of anything else. Limit that usage
-    to detection and targeting commands that turn angle to target.
-
-    WPILib + roboRIO v2 (and maybe v1) usage could be a good vision solution for "zero budget" teams to aim at nearby targets.
-    For better range some pose validation may need to be added to eliminate some of the jitter. The robot is clamped to the
-    floor in AcquireRobotPose (that could be removed). Some teams clamp the pose rotation to the gyro which is not included
-    in this implementation but could be added. (Some teams do this for Limelight MT1; MT2 already does this.)
-
-    LimelightVision is a pricey vision solution and the closest to plug-n-play that appeals to many teams.
-
-    PhotonVision software on RPi 4B or other hardware platforms + OV9281 camera sensor + power supply is good vision and moderate cost.
- */
-
-/*
- * Two example commands to align to the 2025 Reefscape reef targets at the #10 AprilTag:
- *   use 3-D pose - activated by XBox controller A button
- *   use turn to point and drive a distance - activated by XBox controller B button
- * Pick the implementation in VisionContainer:
- *   ControllerVision (roboRIO) 2-D & 3-D
- *   PhotonVision 2-D & 3-D
- *   LimelightVision 2-D & 3-D
- */
 package frc.robot;
-
-import java.lang.invoke.MethodHandles;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
+/**
+ * Presentation of three Vision systems:
+ *   <p>WPILib Vision example (known herein as ControllerVision) with an Example wrapper consistent with the other two wrappers
+ *   <p>Example wrapper for PhotonVision
+ *   <p>Example wrapper for LimelightVision
+ * <p>Each system puts robot pose information to the NetworkTables and that can be viewed in AdvantageScope.
+ * 
+ * <p>These three Vision routines each can detect AprilTags and compute a robot pose. Select the one to run in
+ * {@link RobotContainer#RobotContainer()}
+ * <p>This project may be used in whole by selecting which one of the three vision systems to be demonstrated.
+ * 
+ * <p>Each of the Visions Systems must be configured for the "camera" name and minimum parameters needed for each system.
+ * <p>Each has its mounted location wrt the robot. {@link VisionContainer}
+ * <p>The ControllerVision (completely run on the roboRIO) must also have camera parameters specified herein.
+ *  {@link ControllerVision#ControllerVision()}
+ * <p>ControllerVision arbitrarily selects to use the robot pose of the lowest AprilTag number if there are multiple
+ * tags in view in a frame.
+ * That is likely wrong a lot of the time. Needs some smarts added to that logic starting at this method and below it
+ *  {@link ControllerVision#getPose3d()}. 
+ * <p>Use of PhotonVision or LimelightVision require that those devices and software be setup as instructed in their
+ *  respective documentation. They are mostly configured through their respective "dashboards."
+ * <p>Use of Limelight MegaTag2 requires the gyro value be sent to LL on each iteration. {@link LimelightVision#update()}
+ * <p>Selection of the best pose from LimelightVision requires filtering. Simple example is presented. {@link LimelightVision#update()}
+ * <p>Selection of the best pose from PhotonVision requires using {@link PhotonVision#getEstimatedGlobalPose(Pose2d)}. A dummy stub is
+ * included to give a starting hint of what could be.
+ * <p>Use of the WPILib PoseEstimator requires values from this vision targeting project be merged with the gyro
+ * and wheel odometry positions.
+ * 
+ * <p>This demonstration may be run in simulation mode or on a roboRIO. The cameras are not simulated. That is no
+ * roboRIO is required but the roboRIO simulation may be used with one of the following attached (USB or network) to the PC running simulation:
+ * <p>a camera attached to the simulation PC,
+ * <p>a LimelightVision box,
+ * <p>or PhotonVision running on some device - coprocessor or simulation PC
+ *
+ * <p>For team's customized use, it is fairly easy to copy one or more of the vision systems into a team's own project.
+ * <p>{@link VisionContainer} extends SubsystemBase solely for the purpose of the automatically executed periodic() method.
+ * The extends Subsystem may be removed and the periodic() method run in say {@link Robot#robotPeriodic()}
+ * 
+ * <p>Two example uses of Vision are included as commands:
+ * <p> 1. Turn the robot to a target and drive to a specified distance from the target (yaw and pitch of the robot
+ * wrt the AprilTag) {@link AlignToReefTagRelativeArcade2D}
+ * <p> 2. Drive the robot to a specified field position (3-D pose of the robot in the field) {@link AlignToReefFieldRelativePose3D}
+ * <p> This (swerve) drive command is presented in two forms:
+ * <p>   a. use of three PID controllers to achieve the target position goal with a stub drivetrain receiving the motor commands
+ * <p>   b. proposed, but untested as packaged herein, PathPlanner on the fly command to drive to position
+ *
+ * <p>  These example commands are limited to aligning with a single selected target near AprilTag #10.
+ * <p>  Completed team code should include the robot drivetrain odometry and a gyro is extremely useful
+ * for pose accuracy and drivability of the robot.
+ * <p>  PID parameters must be tuned for each robot/drivetrain. Examples are for the hand-driven camera.
+ * 
+ * <p>PhotonVision and LimelightVision each have examples of their usage on their web sites. Most teams have Vision
+ * code; there are hundreds of varieties. This code may help beginner or novice teams get started quicker.
+ * 
+ * <p>This code has been tested with Limelight 2+, PhotonVision 2026 beta 1 on RPi 4 B, and WPILib 2025.3.2
+ * with both a roboRIO v1 and DriverStation PC simulation.
+ * <p>Targeting commands were driven by a hand-held camera without benefit of a robot.
+ * <p>Cameras used were Microsoft LifeCam HD-3000 (USB interface) and ArduCam UC-844 Rev. B (OV9281 camera sensor; USB interface).
+ * <p>Gyro was simulated with a "0" heading.
+ * <p>Drivetrain was crudely simulated by printing the commanded velocity and voltage values.
+ * 
+ * 
+ * <p>-----Setting up simulation of the roboRIO on the PC-----
+ * <p>Get the PC running the simulation ip address by command prompt program "ipconfig" (linux command is "ifconfig")
+ * <p>Optional Start Outline Viewer on the PC and change Options/settings/team/IP 127.0.0.1 (or the PC IP address) - client nt4 mode and apply
+ * <p>For PhotonVision start the device/program and change Settings Team Number/NetworkTables Server Address enter the PC IP address (the real one; not 127.0.0.1)
+ * <p>For LimelightVision start the device and change Settings Custom NT Server IP: enter the PC IP address (the real one; not 127.0.0.1)
+ * <p>For ControllerVision plugin the camera into the PC
+ * <p>AdvantageScope start the program and select File / Connect to Simulator
+ * <p>Start the "Simulate Robot Code" on the PC
+ * <p>
+ * <p>This is not simulating the camera device; that is not supported in this project. A real camera device
+ * must be used. Only the roboRIO is being simulated.
+ * 
+ * <p>Example of camera simulation is available in PhotonVision only.
+ * <p>--------------------------------------------------------
+ * 
+ * 
+ * <p>Other possible functions not yet determined to be included:
+ * <p>camera focusing Siemens Star (Focus by eye or Limelight - it's pretty easy)
+ * <p>camera calibration (calibrate using PhotonVision and copy its camera matrix from the downloaded setting file)
+ * 
+ * <p>Two example commands to align to the 2025 Reefscape reef targets at the #10 AprilTag:
+ *   <p>use 3-D pose - activated by XBox controller A button {@link RobotContainer#configAButton()}
+ *   <p>use turn to point and drive a distance - activated by XBox controller B button {@link RobotContainer#configBButton()}
+ */
+
 @Logged
 public class Robot extends TimedRobot {
-    private static final String fullClassName = MethodHandles.lookup().lookupClass().getCanonicalName();
     static
     {
-        System.out.println("Loading: " + fullClassName);
+        System.out.println("Loading: " + java.lang.invoke.MethodHandles.lookup().lookupClass().getCanonicalName());
     }
-
-    public RobotContainer robotContainer;
     
     public Robot()
     {    
-        robotContainer = new RobotContainer();
+        new RobotContainer();
     }
 
     @Override
     public void robotPeriodic() // called last in the periodic loop despite always seen written first in Robot.java
     {
-        robotContainer.getVisionContainer().updateVision();
-
         CommandScheduler.getInstance().run();
     }
-
-    @Override
-    public void teleopInit() {}
-
-    @Override
-    public void teleopPeriodic() {}
 }

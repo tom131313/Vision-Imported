@@ -1,7 +1,5 @@
 package frc.robot;
 
-import java.lang.invoke.MethodHandles;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 
@@ -14,10 +12,9 @@ import edu.wpi.first.math.geometry.Pose3d;
  */
 public abstract class CameraBase
 {
-    private static final String fullClassName = MethodHandles.lookup().lookupClass().getCanonicalName();
     static
     {
-        System.out.println("Loading: " + fullClassName);
+        System.out.println("Loading: " + java.lang.invoke.MethodHandles.lookup().lookupClass().getCanonicalName());
     }
 
     // private CameraBase() {}

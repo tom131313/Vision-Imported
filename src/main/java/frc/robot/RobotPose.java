@@ -30,8 +30,11 @@ public class RobotPose {
         return new RobotPose(AprilTagId, yaw, pitch, pose3D);
     }
 
+    /**
+     * Formatted robot pose
+     * @return printable string of the robot pose
+     */
     public String toString() {
         return String.format("tag %d, yaw [deg] %f, pitch [deg] %f, %s", AprilTagId, yaw, pitch, pose3D);
     }
 }
-

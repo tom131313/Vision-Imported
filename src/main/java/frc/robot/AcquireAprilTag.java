@@ -1,7 +1,5 @@
 package frc.robot;
 
-import java.lang.invoke.MethodHandles;
-
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 
@@ -27,10 +25,9 @@ import edu.wpi.first.wpilibj.Timer;
    */
 
 public class AcquireAprilTag {
-  private static final String fullClassName = MethodHandles.lookup().lookupClass().getCanonicalName();
   static
   {
-      System.out.println("Loading: " + fullClassName);
+      System.out.println("Loading: " + java.lang.invoke.MethodHandles.lookup().lookupClass().getCanonicalName());
   }
 
     ControllerVision roboRIOCamera;
@@ -81,7 +78,7 @@ public class AcquireAprilTag {
 
       if (cvSink.grabFrame(mat, 1.) == frameError) {
         // Send the output the error.
-        System.out.println(cvSink.getError());
+        System.out.println("camera error " + cvSink.getError());
         // skip the rest of the current iteration
         return;
       }

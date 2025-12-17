@@ -1,11 +1,13 @@
 package frc.robot;
 
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 import edu.wpi.first.math.ComputerVisionUtil;
@@ -19,10 +21,9 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 
 public class PhotonVision  extends CameraBase {
-    private static final String fullClassName = MethodHandles.lookup().lookupClass().getCanonicalName();
     static
     {
-        System.out.println("Loading: " + fullClassName);
+      System.out.println("Loading: " + java.lang.invoke.MethodHandles.lookup().lookupClass().getCanonicalName());
     }
 
     // Tag positions
@@ -39,7 +40,7 @@ public class PhotonVision  extends CameraBase {
     Transform3d cameraInRobotFrame;
 
     int maxTagId = 25    +1; // add 1 for tag ID 0
-    NetworkTable tagsTable = NetworkTableInstance.getDefault().getTable("PhotonVisionCamera");
+    NetworkTable RobotPoseTable = NetworkTableInstance.getDefault().getTable("PhotonVisionLogged");
     
     List<StructPublisher<Pose3d>> publishRobotPose = new ArrayList<>(maxTagId); // Pose3d
     List<DoubleArrayPublisher> publishRobotServoing = new ArrayList<>(maxTagId); // yaw and pitch
@@ -47,19 +48,17 @@ public class PhotonVision  extends CameraBase {
     
     // PhotonPipelineResult PVResult = new PhotonPipelineResult();
 
-    public PhotonVision(String name, Transform3d cameraInRobotFrame/*robotToCamera transform 3d*/) {
+    public PhotonVision(String name, Transform3d cameraInRobotFrame) {
       this.cameraInRobotFrame = cameraInRobotFrame;
       camera = new PhotonCamera(name);
 
       // make an empty bucket for every possible tag
       for (int tag = 0; tag < maxTagId; tag++) {
-        publishRobotPose.add(null);
-        var robotPosePublisher = tagsTable.getStructTopic("robotPose3D_" + tag, Pose3d.struct).publish();
-        publishRobotPose.set(tag, robotPosePublisher);
+        var robotPosePublisher = RobotPoseTable.getStructTopic("robotPose3D_" + tag, Pose3d.struct).publish();
+        publishRobotPose.add(robotPosePublisher);
 
-        publishRobotServoing.add(null);
-        var robotServoingPublisher = tagsTable.getDoubleArrayTopic("robotServoing_ + tag").publish();
-        publishRobotServoing.set(tag, robotServoingPublisher);
+        var robotServoingPublisher = RobotPoseTable.getDoubleArrayTopic("robotServoing_" + tag).publish();
+        publishRobotServoing.add(robotServoingPublisher);
       }
 
       // better poses possible using the PhotonPoseEstimator; lot's of possibilities with it
@@ -158,11 +157,17 @@ public class PhotonVision  extends CameraBase {
       return bestTarget.getFiducialId();
     }
 
-//FIXME
-// call this then use it in addVisionMeasurement
-// https://docs.photonvision.org/en/latest/docs/programming/photonlib/robot-pose-estimator.html
-    // public Optional<EstimatedRobotPose> getEstimatedGlobalPose(Pose2d prevEstimatedRobotPose) {
-    //     photonPoseEstimator.setReferencePose(prevEstimatedRobotPose);
-    //     return photonPoseEstimator.update(); //FIXME need "update(result)" - which one if multiple; also need previous pose passed in
-    // }
+    /**
+     * call this then use it in addVisionMeasurement
+     * 
+     * <p> https://docs.photonvision.org/en/latest/docs/programming/photonlib/robot-pose-estimator.html
+     * 
+     * <p>It's complicated but this is hint to get you started
+     * @param prevEstimatedRobotPose
+     * @return
+     */
+    public Optional<EstimatedRobotPose> getEstimatedGlobalPose(Pose2d prevEstimatedRobotPose) {
+        photonPoseEstimator.setReferencePose(prevEstimatedRobotPose);
+        return photonPoseEstimator.update(/*dummy cameraResult to compile*/new PhotonPipelineResult());
+    }
 }

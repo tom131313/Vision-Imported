@@ -8,7 +8,6 @@ import edu.wpi.first.wpilibj.shuffleboard.EventImportance;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
-import java.lang.invoke.MethodHandles;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
@@ -42,10 +41,9 @@ import java.util.stream.Collectors;
  */
 public class CommandSchedulerLog 
 {
-    private static final String m_fullClassName = MethodHandles.lookup().lookupClass().getCanonicalName();
     static
     {
-        System.out.println("Loading: " + m_fullClassName);
+        System.out.println("Loading: " + java.lang.invoke.MethodHandles.lookup().lookupClass().getCanonicalName());
     }
 
     private final HashMap<String, Integer> m_currentCommands = new HashMap<String, Integer>();

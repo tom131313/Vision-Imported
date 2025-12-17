@@ -1,21 +1,21 @@
 package frc.robot;
 
-import java.lang.invoke.MethodHandles;
-
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.VisionContainer.VisionSelector;
 
 public class RobotContainer {
-    private static final String fullClassName = MethodHandles.lookup().lookupClass().getCanonicalName();
     static
     {
-        System.out.println("Loading: " + fullClassName);
+        System.out.println("Loading: " + java.lang.invoke.MethodHandles.lookup().lookupClass().getCanonicalName());
     }
 
-    //FIXME options for logging
+    // Select as many different Command logging methods as desired
     private boolean useConsole            = true;
     private boolean useDataLog            = false;
     private boolean useShuffleBoardLog    = false;
@@ -26,25 +26,52 @@ public class RobotContainer {
 
     public RobotContainer()
     {
-        dataLogConfig();
-        configureCommandLogs();
-        visionContainer = new VisionContainer();
+        configDataLog();
+        configCommandLogs();
+        // use VisionSelector to choose which of the 3 vision systems to use
+        var visionSelector = VisionSelector.usePhotonVision;
+        DriverStation.reportWarning("vision selection " + visionSelector, false);
+        visionContainer = new VisionContainer(visionSelector);
         configAButton();
         configBButton();
     }
 
+    /**
+     * activate 3d pose driving to target
+     */
     private static void configAButton()
     {
         Trigger aButton = driverController.a();
-        aButton.whileTrue(new AlignToReefFieldRelativePose3D(true, visionContainer));
+        if (visionContainer.vision())
+        {
+            aButton.whileTrue(new AlignToReefFieldRelativePose3D(true, visionContainer));
+        }
+       else
+        {
+            aButton.whileTrue(Commands.print("No Vision").repeatedly());
+        }
     }
 
+    /**
+     * activate 2-d pose driving to target (yaw and pitch)
+     */
     private static void configBButton()
     {
         Trigger bButton = driverController.b();
-        bButton.whileTrue(new AlignToReefTagRelativeArcade2D(visionContainer));
+        if (visionContainer.vision())
+        {
+            bButton.whileTrue(new AlignToReefTagRelativeArcade2D(visionContainer));
+        }
+        else
+        {
+            bButton.whileTrue(Commands.print("No Vision").repeatedly());
+        }
     }
 
+    /**
+     * useful if commands are organized in a different file than where VisionContainer is instantiated
+     * @return VisionContainer
+     */
     public VisionContainer getVisionContainer()
     {
         return visionContainer;
@@ -53,7 +80,7 @@ public class RobotContainer {
     /**
      * Select what to log with WPILib datalog
      */
-    public static void dataLogConfig()
+    public static void configDataLog()
     {
         // logging to internal drive can cause insufficient space eventually.
         // plugin a FAT32 USB drive for better space usage.
@@ -81,7 +108,7 @@ public class RobotContainer {
      * Configure Command logging to Console/Terminal, DataLog, or ShuffleBoard
      */
     @SuppressWarnings("resource")
-    public void configureCommandLogs()
+    public void configCommandLogs()
     {
         if (useConsole || useDataLog || useShuffleBoardLog) {
             schedulerLog = new CommandSchedulerLog(useConsole, useDataLog, useShuffleBoardLog);
@@ -94,5 +121,4 @@ public class RobotContainer {
             new Alert("No logging", AlertType.kWarning).set(true);
         }
     }
-
 }

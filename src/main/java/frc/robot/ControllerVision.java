@@ -6,11 +6,12 @@
 
 package frc.robot;
 
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 
 import org.opencv.core.MatOfDouble;
 
+import edu.wpi.first.cscore.UsbCamera;
+import edu.wpi.first.cscore.UsbCameraInfo;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -41,10 +42,9 @@ import edu.wpi.first.math.geometry.Transform3d;
  * Camera parameters must be provided from another source source as the related calibration program.
 */     
 public class ControllerVision extends CameraBase implements Runnable {
-  private static final String fullClassName = MethodHandles.lookup().lookupClass().getCanonicalName();
   static
   {
-      System.out.println("Loading: " + fullClassName);
+      System.out.println("Loading: " + java.lang.invoke.MethodHandles.lookup().lookupClass().getCanonicalName());
   }
 
     public enum CameraOption{ArduCam320x240, ArduCam1280x800, LifeCam320x240, LifeCam640x480};
@@ -138,6 +138,25 @@ public class ControllerVision extends CameraBase implements Runnable {
       acquireRobotPose = new AcquireRobotPose(this, usePose3D, robotToCamera);
     }
 
+    public static boolean isAvailable(int cameraDeviceId)
+    {       
+      for (UsbCameraInfo camera : UsbCamera.enumerateUsbCameras())
+      {
+        if (camera.dev == cameraDeviceId)
+        {
+            return true; // found camera so probably okay to try to start auto capture
+        }
+      }
+      
+      System.out.println("camera " + cameraDeviceId + " not found. Other cameras < ");
+      for (UsbCameraInfo camera : UsbCamera.enumerateUsbCameras())
+      {
+        System.out.println(camera.dev + " " + camera.name + " " + camera.path);
+      }
+      System.out.println(" >");
+      return false;
+    }
+
     /**
      * Loop of the thread to acquire camera images and compute the poses of AprilTags
      */
@@ -220,40 +239,12 @@ public class ControllerVision extends CameraBase implements Runnable {
     public ArrayList<RobotPose> getPoses() {
       return poses;
     }
-
 }
       // Set up Pose Estimator - parameters are for a Microsoft LifeCam HD-3000
       // (https://www.chiefdelphi.com/t/wpilib-apriltagdetector-sample-code/421411/21)
       
       // theoretically the resolution factor also directly effects the other camera parameters
       // but apparently recalibrating at various resolutions does yield slightly varying results.
-
-      // the other arducam with Cameron board
-      // 902.229862551387, 0.0, 630.0164752216564,
-      // 0.0, 901.4463862207839, 413.07035838353374,
-      // 0.0, 0.0, 1.0
-          
-      // using Samsung tablet
-      // camMatrix: 
-      // [908.014390012331, 0.0, 597.8814589360088,
-      // 0.0, 908.6191476725982, 413.8612971221383,
-      //  0.0, 0.0, 1.0]
-      // distortionCoeffs:
-      // [0.052173675342917676, -0.07090132559762727, -5.866285222375848E-4, -0.002475170189898108, 0.012835458369393258, -0.002442550780537089, 0.005625375255529692, 9.391199615674332E-4]
-
-      // using samsung desktop screen
-      // CALIBRATION SUCCESS for res 1280x800 in 291.6018ms! camMatrix: 
-      // [907.5869786612509, 0.0, 604.8488080504388, 0.0, 909.4739674568915, 411.6013865871937, 0.0, 0.0, 1.0]
-      // distortionCoeffs:
-      //  0.05483635427166114, k1
-      // -0.09776533602636311, k2
-      // -9.78236645068978E-5, p1
-      //  4.8823267235786116E-5, p2
-      //  0.04332976089574157, k3
-      // -0.00373311108258594, k4
-      //  0.005395356105023349, k5
-      // -1.99252152117131E-4 k6
-      // (1 + 0.05483635427166114r^2 + -0.09776533602636311r^4 + 0.04332976089574157r^6) / (1 + -0.00373311108258594r^2 + 0.005395356105023349r^4 + -1.99252152117131E-4r^6) for r from 0 to 400
 
       //opencv tutorial example
       // https://www.wolframalpha.com/input/?i=plot (1 + -4.1802327176423804e-001 Power[\(40)Divide[r,6.5746697944293521e+002]\(41),2] + 5.0715244063187526e-001 Power[\(40)Divide[r,6.5746697944293521e+002]\(41),4] + -5.7843597214487474e-001*Power[\(40)Divide[r,6.5746697944293521e+002]\(41),6]) 

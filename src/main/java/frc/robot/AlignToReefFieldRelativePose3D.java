@@ -1,6 +1,5 @@
 package frc.robot;
 
-import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -39,10 +38,9 @@ import edu.wpi.first.wpilibj2.command.Command;
  * <p>Other references for 3-D poses at LimelightVision.io and photonvision.org
  */
 public class AlignToReefFieldRelativePose3D extends Command {
-  private static final String fullClassName = MethodHandles.lookup().lookupClass().getCanonicalName();
   static
   {
-      System.out.println("Loading: " + fullClassName);
+    System.out.println("Loading: " + java.lang.invoke.MethodHandles.lookup().lookupClass().getCanonicalName());
   }
   
   private int tagIDDesired = 10; // FIXME need dynamic determination of the tag to use
@@ -142,7 +140,7 @@ public class AlignToReefFieldRelativePose3D extends Command {
       return;
     }    
 
-    System.out.println((target.getX()-pose.pose3D.getX()) + " " + (target.getY()-pose.pose3D.getY()) + " "  + (target.getRotation().getZ()-pose.pose3D.getRotation().getZ()));
+    System.out.println("pose error " + (target.getX()-pose.pose3D.getX()) + " " + (target.getY()-pose.pose3D.getY()) + " "  + (target.getRotation().getZ()-pose.pose3D.getRotation().getZ()));
 
     xSpeed = xController.calculate(pose.pose3D.getX());
     ySpeed = yController.calculate(pose.pose3D.getY());
@@ -161,7 +159,7 @@ public class AlignToReefFieldRelativePose3D extends Command {
 
     if (interrupted)
     {
-        System.out.println("ended by interrupted");
+        System.out.println(" ended by interrupted ");
     }
   }
 
@@ -184,17 +182,17 @@ public class AlignToReefFieldRelativePose3D extends Command {
 
     if (bail)
     {
-      System.out.print(" ended by bail " +  bail);
+      System.out.print(" ended by bail ");
     }
 
     if (dontSeeTag)
     {
-      System.out.print(" ended by don't see tag " + dontSeeTag);
+      System.out.print(" ended by don't see tag ");
     }
 
     if (holdPose)
     {
-      System.out.print(" ended by correct pose held " + holdPose);
+      System.out.print(" ended by correct pose held ");
     }
 
     return bail || dontSeeTag || holdPose;
@@ -210,11 +208,12 @@ public class AlignToReefFieldRelativePose3D extends Command {
     /**
      * Sample of PathPlanner followPath to drive to target position. It is essentially the PID
      * controllers similar to the above command controllers and would replace the above command.
-     * <p>AutoBuilder must be configured before usage.
      * <p>Drives autonomously from the given pose to the target pose using PathPlanner
+     * <p>PathPlanner AutoBuilder must be configured and tuned before usage.
+     * <p>This code has not been verified but came from functioning team code.
      * @param targetPose
      * @param currentPose
-     * @return
+     * @return Command to follow path on the fly
      * @author Biggie Cheese
      */
     public /*static*/ Command driveToPositionCommand(Pose2d targetPose, Pose2d currentPose)
@@ -245,7 +244,7 @@ public class AlignToReefFieldRelativePose3D extends Command {
 
     private class Drivetrain
     {
-        /** Stub to simulate (extremely badly) for testing.
+        /** Stub to simulate (extremely badly - nothing to it) for testing.
          * Robot Centric Orientation (not Field centric)
          * @param chassisSpeeds the desired robot chassis speed
          * @return drive command
@@ -253,7 +252,7 @@ public class AlignToReefFieldRelativePose3D extends Command {
         public void driveRobotRelative(ChassisSpeeds chassisSpeeds)
         {
           // goal current speeds
-          System.out.print(" " + chassisSpeeds + " ");
+          // System.out.print(" " + chassisSpeeds + " ");
         }
 
         /**

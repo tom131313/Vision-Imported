@@ -1,6 +1,5 @@
 package frc.robot;
 
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -51,10 +50,10 @@ import frc.robot.Image.AcquisitionTime;
    * speed of computing poses from the detections.
    */
 public class AcquireRobotPose {
-  private static final String fullClassName = MethodHandles.lookup().lookupClass().getCanonicalName();
+
   static
   {
-      System.out.println("Loading: " + fullClassName);
+    System.out.println("Loading: " + java.lang.invoke.MethodHandles.lookup().lookupClass().getCanonicalName());
   }
 
   ControllerVision roboRIOCamera;
@@ -70,7 +69,7 @@ public class AcquireRobotPose {
     // We'll output to NT
 
     NetworkTable robotsTable = NetworkTableInstance.getDefault().getTable("robotsLocations");
-    IntegerArrayPublisher pubTags = robotsTable.getIntegerArrayTopic("tags").publish();
+    IntegerArrayPublisher pubTagsDetected = robotsTable.getIntegerArrayTopic("tagsDetected").publish();
     List<StructPublisher<Pose3d>> publishRobotPose = new ArrayList<>(AprilTagsLocations.getTagCount());
       
     double tagSize = 0.1651; // meters of the targeted AprilTag
@@ -192,7 +191,7 @@ public class AcquireRobotPose {
         SmartDashboard.putNumber("tag " + detection.getId() + " y (pitch) angle [deg]", pitch);
 
         if (usePose3D)
-         {
+        {
         Transform3d tagFacingCameraFrame = estimator.estimate(detection);
 
         { // draw a frustum in front of the AprilTag
@@ -386,7 +385,7 @@ public class AcquireRobotPose {
       }
 
       // put list of tags seen onto dashboard
-      pubTags.set(tags.stream().mapToLong(Long::longValue).toArray());
+      pubTagsDetected.set(tags.stream().mapToLong(Long::longValue).toArray());
     
       // all the data available at this point.
 
