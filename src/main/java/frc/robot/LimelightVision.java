@@ -19,14 +19,19 @@ import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.LimelightHelpers.PoseEstimate;
 
 /**
- * Limelights require significant setup using the dashboard and, somewhat, code can be used.
+ * Limelight requires significant setup using the dashboard and, somewhat, code can be used.
  * 
  * <p> the LimeLight fmap (field map) is at
  * https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-map-specification
  */
 
 /**
- * Implementation of LimelightVision. Can be used with the VisionContainer class.
+ * Implementation of LimelightVision. This class can be used with the VisionContainer class or without
+ * that wrapper by the example usage described below.
+ * 
+ * <p>Simple validation/filtering of MegaTag and MegaTag2 are presented in {@link #update()} and can be
+ * changed as determined by game and team use.
+ * 
  * <p>This class acquires the Limelight target data and the MegaTag and MegaTag2 robot poses in field.
 
  * <p>In part it is a stripped-down version of the LimelightHelpers, somewhat uses more efficient
@@ -532,8 +537,8 @@ stddevs
   @SuppressWarnings("resource")
   public static boolean isAvailable(String limelightName)
   {
-    final var retryDelay = (long) Seconds.of(1).in(Milliseconds); // enter seconds; comes out milliseconds
-    final var retryLimit = 15;
+    final var retryDelay = Seconds.of(1);
+    final var retryLimit = 20;
 
     // Get the limelight table
     // duplicates the constructor so constructor can be private and makeCamera can return a null
@@ -551,7 +556,7 @@ stddevs
       System.out.println("attempt " + i + " of " + retryLimit + " to attach to limelight named " + limelightName);
       try
       {
-        Thread.sleep(retryDelay);
+        Thread.sleep((long)retryDelay.in(Milliseconds));
       } catch (InterruptedException e)
       {
         e.printStackTrace();

@@ -1,12 +1,16 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Milliseconds;
+import static edu.wpi.first.units.Units.Seconds;
+
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 /**
@@ -29,26 +33,24 @@ public class VisionContainer extends SubsystemBase {
     }
   }
 
+  public enum VisionSelector{useControllerVision, usePhotonVision, useLimelightVision}
+  private VisionSelector visionSelector;
+
   private ControllerVision controllerVision = null; // only for Controller (roboRIO)
   private PhotonVision photonVision = null; // only for PV
   private LimelightVision limelightVision = null; // only for LL
 
-  private boolean vision = false;
-  public enum VisionSelector{useControllerVision, usePhotonVision, useLimelightVision}
-  public VisionSelector visionSelector;
-
-  private AtomicReference<RobotPose> robotPose = new AtomicReference<>(new RobotPose(-1, 0., 0., Pose3d.kZero)); // this is the current pose
+  private AtomicReference<Optional<RobotPose>> robotPose = new AtomicReference<Optional<RobotPose>>(Optional.empty());
   private Transform3d robotToCamera;
+  private boolean vision = false;
 
   public VisionContainer(VisionSelector visionSelector)
   {
     this.visionSelector = visionSelector;
 
-    if (visionSelector == VisionSelector.useControllerVision)
+    switch (visionSelector)
     {
-    /*****************************************************
-     * Controller (roboRIO) camera used for AprilTag usage
-     ****************************************************/
+    case useControllerVision:
       // Select the camera model and resolution from the list of cameras
       // that have calibration data.
 
@@ -88,18 +90,17 @@ public class VisionContainer extends SubsystemBase {
         acquireControllerCamera.setPriority(acquireControllerCamera.getPriority() - 1);
         acquireControllerCamera.setDaemon(true);
         acquireControllerCamera.start();
+        vision = true;
       }
       else
       {
+        DriverStation.reportWarning("No ControllerVision process", false);
         controllerVision = null;
       }
-    }
 
-    if (visionSelector == VisionSelector.usePhotonVision)
-    {
-      /****************************************************
-       * PhotonVision camera used for AprilTag usage
-       ***************************************************/
+      break;
+
+    case usePhotonVision:
       // Select the camera name
 
       // Enter the camera location wrt the robot. Example camera mounted facing
@@ -111,26 +112,50 @@ public class VisionContainer extends SubsystemBase {
                 new Rotation3d(0,Units.degreesToRadians(-25.),0));
       robotToCamera = robotToCameraPV;
 
-      photonVision = new PhotonVision(cameraName, robotToCameraPV);
-      if (! photonVision.camera.isConnected())
-      {
-        photonVision.camera.getAllUnreadResults(); // force PV to issue no camera by that name but there are other PV cameras
-        photonVision = null; // put it back to null since constructor didn't really make a camera
+      // PV started connecting when the NT server started but still it's a race to make
+      // a connection before this instantiation and check
+      try {
+        Thread.sleep(3000);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
       }
-    }
 
-    if (visionSelector == VisionSelector.useLimelightVision)
-    {
-      /****************************************************
-       * LimeLight camera used for AprilTag usage
-       ***************************************************/
+      photonVision = new PhotonVision(cameraName, robotToCameraPV);
+
+      final var retryDelay = Seconds.of(1);
+      final var retryLimit = 20;
+      
+      checkConnection:
+      {
+      for (int i = 1; i <= retryLimit; i++)
+      {
+        if (photonVision.camera.isConnected())
+        {
+          vision = true;
+          break checkConnection;
+        }
+        System.out.println("attempt " + i + " of " + retryLimit + " to attach to PhotonVision named " + cameraName);      
+        try {
+          Thread.sleep((long)retryDelay.in(Milliseconds));
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
+      DriverStation.reportWarning("No PhotonVision connection", false);
+      photonVision.camera.getAllUnreadResults(); // force PV to issue no camera by that name but there are other PV cameras
+      photonVision = null; // put it back to null since constructor didn't really make a viable camera
+      }
+
+      break;
+
+    case useLimelightVision:
       /*
       * Caution: Limelight pitch setup has the opposite sign of PhotonVision and ControllerVision
       * LL positive pitch is pointing up
       * Snap Robot to Floor is only for MegaTag; MegaTag2 always snaps to floor.
       * Further than 1.1m MegaTag tends to have a lot of jitter especially in the z (height) axis.
       */
-      // enter the limelight name
+      // Select the limelight name
       var limelightName = "limelight";
       if (LimelightVision.isAvailable(limelightName))
       {
@@ -140,16 +165,22 @@ public class VisionContainer extends SubsystemBase {
                 c.getX(), c.getY(), c.getZ(),
                 new Rotation3d(c.getRotation().getX(), c.getRotation().getY(), c.getRotation().getZ())); 
           robotToCamera = robotToCameraLL;
+          vision = true;
           // put other LL setup as needed
           // LimelightHelpers.setStreamMode_PiPSecondary(limelightName); // if there is a driver camera, where to put the image - pick your favorite
       }
       else
       {
+          DriverStation.reportWarning("No LimelightVision connection", false);
           limelightVision = null;
       }
-    }
 
-    vision = controllerVision != null || photonVision != null || limelightVision != null;
+     break;
+    
+    default:
+        System.out.println("impossible unless the enum is wrong");
+        break;
+    }
   }
 
   /**
@@ -166,52 +197,64 @@ public class VisionContainer extends SubsystemBase {
    */
   public void periodic()
   {
-    if (controllerVision != null)
+    if (! vision())
     {
+      return;
+    }
+
+    switch (visionSelector)
+    {
+    case useControllerVision:
         controllerVision.update();
         if (controllerVision.isFresh())
         {
           if (controllerVision.getPoses().size() >= 1)
           {
             //FIXME arbitrarily pick lowest tag id; this needs to be thought through
-            robotPose.set(controllerVision.getPoses().get(0).clone());
+            robotPose.set(Optional.of(controllerVision.getPoses().get(0).clone()));
             // controllerVision.getPoses().forEach(pose -> System.out.println("CV " + pose)); // show all available data
           }
         }
         else
         {
-          robotPose.set(new RobotPose(-1, 0., 0., new Pose3d()));
+          robotPose.set(Optional.empty());
         }
-    }
 
-    if (photonVision != null)
-    {
+        break;
+
+    case usePhotonVision:
         photonVision.update();
         if (photonVision.isFresh())
         {
-          robotPose.set(new RobotPose(photonVision.getTagID(), photonVision.getTX(), photonVision.getTY(), photonVision.getPose3d()));
+          robotPose.set(Optional.of(new RobotPose(photonVision.getTagID(), photonVision.getTX(), photonVision.getTY(), photonVision.getPose3d())));
           // System.out.println("PV " + photonVision.getTagID() + ", " + photonVision.getTX() + ", " + photonVision.getTY() + ", " + photonVision.getPose3d());          
         }
         else
         {
-          robotPose.set(new RobotPose(-1, 0., 0., new Pose3d()));
+          robotPose.set(Optional.empty());
         }
-    }
 
-    if (limelightVision != null)
-    {
+        break;
+
+    case useLimelightVision:
         limelightVision.update();
         if (limelightVision.isFresh())
         {
-          robotPose.set(new RobotPose(limelightVision.getTagID(), limelightVision.getTX(), limelightVision.getTY(), limelightVision.getPose3d()));
+          robotPose.set(Optional.of(new RobotPose(limelightVision.getTagID(), limelightVision.getTX(), limelightVision.getTY(), limelightVision.getPose3d())));
           // System.out.println((limelightVision.getSuggestResetOdometry() ?
           //   "reset odometry pose " : "addVisionMeasurement pose ") +
           //    limelightVision.getPose2d() + (limelightVision.isMegaTag2() ? " MegaTag2 pose" : " MegaTag pose"));
         }
         else
         {
-          robotPose.set(new RobotPose(-1, 0., 0., new Pose3d()));
+          robotPose.set(Optional.empty());
         }
+
+        break;
+
+    default:
+        System.out.println("impossible unless the enum is wrong");
+        break;
     }
   }
 
@@ -219,9 +262,9 @@ public class VisionContainer extends SubsystemBase {
    * Robot pose for whomever wants it
    * @return RobotPose
    */
-  public RobotPose getRobotPose()
+  public Optional<RobotPose> getRobotPose()
   {
-    return robotPose.get().clone(); // fresh copy pulled from the AtomicReference
+      return robotPose.get();
   }
 
   /**

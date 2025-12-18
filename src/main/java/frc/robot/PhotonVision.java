@@ -20,6 +20,9 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 
+/**
+ * PhotonVision requires significant setup using the dashboard and, somewhat, code can be used.
+ */
 public class PhotonVision  extends CameraBase {
     static
     {
@@ -44,7 +47,6 @@ public class PhotonVision  extends CameraBase {
     
     List<StructPublisher<Pose3d>> publishRobotPose = new ArrayList<>(maxTagId); // Pose3d
     List<DoubleArrayPublisher> publishRobotServoing = new ArrayList<>(maxTagId); // yaw and pitch
-    ArrayList<RobotPose> poses = new ArrayList<>(maxTagId);
     
     // PhotonPipelineResult PVResult = new PhotonPipelineResult();
 

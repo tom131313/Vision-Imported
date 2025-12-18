@@ -17,6 +17,12 @@ import edu.wpi.first.wpilibj.Filesystem;
 
 /**
  * Easy access to the WPILib AprilTag Field Layout
+ * <p>Example drive commands somewhat assumed 2025 Reefscape so that is hard-wired in place of kDefaultField that will be
+ * different in 2026.
+ * 
+ * <p>Tag locations on the field are used to calculate robot locations on the field given the robot location wrt the tag.
+ * 
+ * <p>The tag locations are published to NetworkTables and may be displayed with AdvantageScope.
  */
 public class AprilTagsLocations
  {      
@@ -35,9 +41,9 @@ public class AprilTagsLocations
 
         try {
             if(CustomTagLayout)
-                aprilTagFieldLayout = new AprilTagFieldLayout(Filesystem.getDeployDirectory() + "/2024-crescendo.json"); // custom file example
+                aprilTagFieldLayout = new AprilTagFieldLayout(Filesystem.getDeployDirectory() + "/2024-crescendo.json"); // custom file example (missing)
             else
-                aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+                aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded/*kDefaultField*/);
         } catch (IOException e) {
             e.printStackTrace();
             aprilTagFieldLayout = null;

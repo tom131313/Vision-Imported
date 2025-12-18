@@ -1,11 +1,35 @@
 package frc.robot;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
 /**
- * Presentation of three Vision systems:
+ * This Project is a wrapper called {@link VisionContainer} for three lower level wrappers {@link ControllerVision}
+ * {@link PhotonVision} {@link LimelightVision} of three complex vision systems - WPILib, PhotonVision, and LimelightVision.
+ * 
+ * After selecting and configuring the desired vision system as described far below, use the robot pose as in an example command
+ * {@link AlignToReefFieldRelativePose3D} {@link AlignToReefTagRelativeArcade2D}
+ * briefly:
+ <pre><code>
+    RobotPose pose;
+
+    if (visionContainer.getRobotPose().isPresent())
+    { // see a tag
+      pose = visionContainer.getRobotPose().get();  
+    }
+    else
+    { // no tag seen
+      return;
+    }
+</pre></code>
+
+ * <p>Each of the three wrappers for the three vision system also may be used without benefit of the simple VisionContainer wrapper.
+ * Doing so allows use of more methods in the individual vision system wrapper. And there is no requirement to use any of these wrappers.
+ * Each vision system has a complex set of methods to perform a lot of functions. These wrappers make it easier to get started quickly.
+ * 
+ * <p>Presentation of three Vision systems:
  *   <p>WPILib Vision example (known herein as ControllerVision) with an Example wrapper consistent with the other two wrappers
  *   <p>Example wrapper for PhotonVision
  *   <p>Example wrapper for LimelightVision
@@ -44,13 +68,14 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
  * 
  * <p>Two example uses of Vision are included as commands:
  * <p> 1. Turn the robot to a target and drive to a specified distance from the target (yaw and pitch of the robot
- * wrt the AprilTag) {@link AlignToReefTagRelativeArcade2D}
+ * wrt the AprilTag) {@link AlignToReefTagRelativeArcade2D} - activated by XBox controller B button {@link RobotContainer#configBButton()}
  * <p> 2. Drive the robot to a specified field position (3-D pose of the robot in the field) {@link AlignToReefFieldRelativePose3D}
+ *  - activated by XBox controller A button {@link RobotContainer#configAButton()}
  * <p> This (swerve) drive command is presented in two forms:
  * <p>   a. use of three PID controllers to achieve the target position goal with a stub drivetrain receiving the motor commands
  * <p>   b. proposed, but untested as packaged herein, PathPlanner on the fly command to drive to position
  *
- * <p>  These example commands are limited to aligning with a single selected target near AprilTag #10.
+ * <p>  These example commands are limited to aligning with a single selected target near 2025 Reefscape reef AprilTag #10.
  * <p>  Completed team code should include the robot drivetrain odometry and a gyro is extremely useful
  * for pose accuracy and drivability of the robot.
  * <p>  PID parameters must be tuned for each robot/drivetrain. Examples are for the hand-driven camera.
@@ -81,14 +106,29 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
  * <p>Example of camera simulation is available in PhotonVision only.
  * <p>--------------------------------------------------------
  * 
+ * If desired, unneeded vision code may be stripped out based on each file's use:
+ *   AcquireAprilTag.java                    CV
+ *   AcquireRobotPose.java                   CV
+ *   AlignToReefFieldRelativePose3D.java     CV, PV, LV
+ *   AlignToReefTagRelativeArcade2D.java     CV, PV, LV
+ *   AprilTagsLocations.java                 CV, PV, LV (LV only by association with drive commands that may use the tag locations)
+ *   CameraBase.java                         CV, PV, LV
+ *   CommandSchedulerLog.java                CV, PV, LV
+ *   ControllerVision.java                   CV
+ *   Image.java                              CV
+ *   LimelightHelpers.java                           LV
+ *   LimelightVision.java                            LV
+ *   Main.java                               CV, PV, LV
+ *   PhotonVision.java                           PV                       
+ *   Robot.java                              CV, PV, LV
+ *   RobotContainer.java                     CV, PV, LV
+ *   RobotPose.java                          CV, PV, LV
+ *   VisionContainer.java                    CV, PV, LV (four cases of the two undesired vision processes may be removed)
  * 
  * <p>Other possible functions not yet determined to be included:
  * <p>camera focusing Siemens Star (Focus by eye or Limelight - it's pretty easy)
- * <p>camera calibration (calibrate using PhotonVision and copy its camera matrix from the downloaded setting file)
- * 
- * <p>Two example commands to align to the 2025 Reefscape reef targets at the #10 AprilTag:
- *   <p>use 3-D pose - activated by XBox controller A button {@link RobotContainer#configAButton()}
- *   <p>use turn to point and drive a distance - activated by XBox controller B button {@link RobotContainer#configBButton()}
+ * <p>camera calibration (calibrate using PhotonVision and copy its camera matrix from the downloaded setting file
+ *  or https://www.calibdb.net/ )
  */
 
 @Logged

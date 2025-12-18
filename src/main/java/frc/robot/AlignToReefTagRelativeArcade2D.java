@@ -102,15 +102,16 @@ public class AlignToReefTagRelativeArcade2D extends Command {
     
     public void execute()
     {
-        var pose = visionContainer.getRobotPose();
+         RobotPose pose;
 
-        if (pose.AprilTagId >= 0)
+        if (visionContainer.getRobotPose().isPresent())
         { // see a tag so reset countdown to failure timer and process this iteration
-            dontSeeTagTimer.reset();      
+          pose = visionContainer.getRobotPose().get();
+          dontSeeTagTimer.reset();      
         }
         else
         { // no tag seen so let the countdown to failure timer run and quit this iteration
-            return;
+          return;
         }
  
         if (pose.AprilTagId != tagIDDesired) // make sure still looking at the correct tag
