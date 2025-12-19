@@ -115,10 +115,15 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
  *   RobotPose.java                          CV, PV, LV
  *   VisionContainer.java                    CV, PV, LV (four cases of the two undesired vision processes may be removed)
  * 
- * <p>Other possible functions not yet determined to be included:
- * <p>camera focusing Siemens Star (Focus by eye or Limelight - it's pretty easy)
- * <p>camera calibration (calibrate using PhotonVision and copy its camera matrix from the downloaded setting file
- *  or https://www.calibdb.net/ )
+ * <p>Cameras that allow manual focus must be checked and focused. It's easy to focus a camera by eye or use the Limelight focus pipeline.
+ * A Siemens Star can be used or any object at about the typical distance that the camera is to be used. Mark the lens holder where the
+ * camera is focused and glue into place if it's prone to moving.
+ * 
+ * Autofocus sounds like a good idea but some inexpensive cameras jitter violently trying to focus continuously. Autofocus likely is
+ * more harmful than helpful.
+ * 
+ * <p>Cameras need to be calibrated - creating a camera matrix at the desired resolution. Calibrate using PhotonVision and copy its
+ * camera matrix from the downloaded setting file or try this online calibration database and calibrator https://www.calibdb.net/ .
  */
 
 @Logged
