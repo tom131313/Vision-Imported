@@ -10,21 +10,11 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
  * {@link PhotonVision} {@link LimelightVision} of three complex vision systems - WPILib, PhotonVision, and LimelightVision.
  * 
  * After selecting and configuring the desired vision system as described far below, use the robot pose as in an example command
- * {@link AlignToReefFieldRelativePose3D} {@link AlignToReefTagRelativeArcade2D}
- * briefly:
- <pre><code>
-    RobotPose pose;
-
-    if (visionContainer.getRobotPose().isPresent())
-    { // see a tag
-      pose = visionContainer.getRobotPose().get();  
-    }
-    else
-    { // no tag seen
-      return;
-    }
-</pre></code>
-
+ * {@link AlignToReefFieldRelativePose3D} or {@link AlignToReefTagRelativeArcade2D}
+ * 
+ * <p>See {@link VisionContainer} for a brief example of code to use the RobotPose provided by that class and how to
+ *  instantiate each of the vision systems.
+ * 
  * <p>Each of the three wrappers for the three vision system also may be used without benefit of the simple VisionContainer wrapper.
  * Doing so allows use of more methods in the individual vision system wrapper. And there is no requirement to use any of these wrappers.
  * Each vision system has a complex set of methods to perform a lot of functions. These wrappers make it easier to get started quickly.

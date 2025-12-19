@@ -14,11 +14,46 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 /**
- * ControllerVision (roboRIO) returns team specified pose of lowest tag ID
+ * This class is a wrapper for the three vision classes {@link ControllerVision}, {@link PhotonVision}, and {@link LimelightVision}
+ * <p>ControllerVision (roboRIO) returns team specified pose of lowest tag ID
  *  (This probably needs work! See {@link #periodic()} ControllerVision block)
  * <p>PhotonVision returns its best pose
  * <p>LimelightVision returns team specified filtered selection from MegaTag or MegaTag2
  *  (This is a reasonable default but could use work! See {@link LimelightVision#update()})
+ * 
+ * After selecting and configuring the desired vision system, use the robot pose as in example commands
+ * {@link AlignToReefFieldRelativePose3D} and {@link AlignToReefTagRelativeArcade2D}
+ * briefly:
+ *  <pre><code>
+    RobotPose pose;
+    double cameraHeight
+    if (visionContainer.getRobotPose().isPresent())
+    { // see a tag
+      pose = visionContainer.getRobotPose().get();
+      // some distance calculations require camera height from floor
+      cameraHeight = visionContainer.getRobotToCamera().getZ();  
+    }
+    else
+    { // no tag seen
+      return;
+    }
+    // RobotPose is the AprilTagId associated with the robot yaw and pitch wrt the tag and Pose3d wrt the field
+</pre></code>
+
+ * Getters are available for each of the three vision systems. This allows use of other low level methods that may be available within the systems' classes.
+ * That also helps reveal the following getters which are duplicative with the RobotPose class data so there is no reason to use them.
+ * Each vision system extends CameraBase which provides for 
+ *   public abstract void update();
+ *   public abstract boolean isFresh();
+ *   public abstract int getTagID();
+ *   public abstract Pose3d getPose3d();
+ *   public abstract Pose2d getPose2d();
+ *   public abstract double getTX();
+ *   public abstract double getTY();
+ * 
+ * Usage of these methods requires that after "update()" the "isFresh()" is checked before using any of the getters.
+ * Since all of these data are available in the RobotPose there shouldn't be a reason to use these methods.
+ * Maybe they should be protected or unspecified instead of public.
  */
 public class VisionContainer extends SubsystemBase {
   static {
@@ -274,5 +309,29 @@ public class VisionContainer extends SubsystemBase {
   public Transform3d getRobotToCamera()
   {
       return robotToCamera;
+  }
+
+  /**
+   * Getter for vision system for CameraBase getters
+   * @return
+   */
+  public PhotonVision getPhotonVision() {
+    return photonVision;
+  }
+
+  /**
+   * Getter for vision system for CameraBase getters
+   * @return
+   */
+  public LimelightVision getLimelightVision() {
+      return limelightVision;
+  }
+
+  /**
+   * Getter for vision system for CameraBase getters
+   * @return
+   */
+  public ControllerVision getControllerVision() {
+      return controllerVision;
   }
 }

@@ -23,7 +23,7 @@ import edu.wpi.first.networktables.StructPublisher;
 /**
  * PhotonVision requires significant setup using the dashboard and, somewhat, code can be used.
  */
-public class PhotonVision  extends CameraBase {
+public class PhotonVision extends CameraBase {
     static
     {
       System.out.println("Loading: " + java.lang.invoke.MethodHandles.lookup().lookupClass().getCanonicalName());
@@ -121,7 +121,7 @@ public class PhotonVision  extends CameraBase {
 
         }
         else {
-                  System.out.println("skipping because result has no targets");
+            System.out.println("skipping because result has no targets");
         }
       }
     }
