@@ -13,7 +13,8 @@ import edu.wpi.first.wpilibj.Timer;
   /**
    * WPILib version of Detect AprilTags
    * 
-   * This is intended to run in an independent thread.
+   * This was intended to run in an independent thread but now in this project it shares a thread
+   * with AcquireRobotPose.
    * 
    * A USB camera is defined and then this loops forever acquiring an image from the camera
    * and detecting any AprilTags in the image. Detected AprilTags are saved for subsequent
@@ -21,7 +22,8 @@ import edu.wpi.first.wpilibj.Timer;
    * 
    * Camera image displayed on port 1181
    * 
-   * It's a free-wheeling thread that acquires detected tags from camera images as fast as possible.
+   * It was a free-wheeling thread that acquires detected tags from camera images as fast as
+   * but now in this project it is paced also by completion of the {@link AcquireRobotPose#run()}.
    */
 
 public class AcquireAprilTag {
@@ -34,7 +36,6 @@ public class AcquireAprilTag {
     int frameNumber = 0;
     AprilTagDetector detector = new AprilTagDetector();
     CvSink cvSink;
-    // Mats are very memory expensive. Lets reuse these.
     Mat mat = new Mat();
     Mat grayMat = new Mat();
 

@@ -18,11 +18,13 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 
 /**
- * This is a demo program showing the detection of AprilTags. The image is acquired from the USB
- * camera, then any detected AprilTags are marked up on the image, transformed to the robot on
- * the field pose and sent to NetworkTables. The robot pose is clamped to the floor and that could
- * be removed in AcquireRobotPose. (LimelightVision setup has that option as set in the Limelight.)
- * AcquireRobotPose has no provision for using the gyro to improve pose estimation. The gyro
+ * This is a demo program showing the detection of AprilTags and robot pose calculation using WPILib
+ * functions.
+ * <p>The image is acquired from the USB camera, then any detected AprilTags are marked up on the image,
+ * transformed to the robot on the field pose and sent to NetworkTables.
+ * <p>The robot pose is clamped to the floor and that could be removed in AcquireRobotPose. (LimelightVision
+ * setup has that option as set in the Limelight.)
+ * <p>AcquireRobotPose has no provision for using the gyro to improve pose estimation. The gyro
  * heading could be used instead of the pose rotation, if desired.
  *
  * <p>Be aware that the performance on this is much worse than a coprocessor solution!
@@ -40,6 +42,13 @@ import edu.wpi.first.math.geometry.Transform3d;
  * Camera has a known pose relative to the robot chassis.
  * Combine this chain to calculate the robot pose in the field.
  * Camera parameters must be provided from another source source as the related calibration program.
+ * 
+ * <p>The original design of this vision system was {@link AcquireAprilTag} and {@link AcquireRobotPose}
+ * ran in two separate free-wheeling threads that were synchronized as needed by {@link Image}. That
+ * scheme has been disabled, however, some remnants remain. The implementation for this project is
+ * this {@link ControllerVision} class runs in a separate free-wheeling thread started by a higher level
+ * thread. Then this class {@link #run()} runs {@link AcquireAprilTag#run()} and
+ * {@link AcquireRobotPose#run()} successively thus no synchronization is needed.
 */     
 public class ControllerVision extends CameraBase implements Runnable {
   static
@@ -71,67 +80,26 @@ public class ControllerVision extends CameraBase implements Runnable {
         this.cameraDeviceId = cameraDeviceId;
 
       switch(selectedCameraOption) {
-        case ArduCam320x240: // rough calibration - wasn't done with a nice flat board
-        cameraW = 320;
-        cameraH = 240;
-        fps = 100;
-        cameraFx = 273.8682279422785;
-        cameraFy = 274.2578211409246;
-        cameraCx = 142.187975375679;
-        cameraCy = 124.6151823259089;
-        distortionCoeffs = new MatOfDouble();
-          // much of the small amount of distortion from calibration was actually the board
-          // not being smooth so don't bother using the distortion
-          // [0.03872533667096114, -0.2121025605447465, 0.00334472765894009, -0.006080540135581289, 0.4001779842036727]
+        
+        case ArduCam320x240:
+          ArduCam320x240();
           break;
 
-  // {"DISPLAY_NAME":"","DISTORTION_COEFFICIENTS":[
-  // 0.09279791624496432,-0.013162736031556143,0.00034288948646321224,0.0008282135215583248,-0.2112763216404896],
-  // "INTRINSICS_MATRIX":[
-  // 742.0300917168702,0.0,652.0266479431351,
-  // 0.0,741.6376375442737,375.18558295593374,
-  // 0.0,0.0,1.0],
-  // "REPROJECTION_ERROR":0.31303468947665714,"RES_X":1280.0,"RES_Y":800.0}
-        case ArduCam1280x800:// Arducam_OV9281_USB_Camera_(A?); Cameron board 1280x800      
-        cameraW = 1280;
-        cameraH = 800;
-        fps = 100;
-        cameraFx = 907.6920444758049;
-        cameraFy = 907.1513951038395;
-        cameraCx = 604.1750223777503;
-        cameraCy = 416.4609913313957;
-        distortionCoeffs = new MatOfDouble(
-            0.040354289830866516, -0.044066115475547216, 6.662818829158613E-4,9.755603732755772E-4,  // k1 k2 p1 p2
-              -0.013630390510289322, // k3
-              -0.0011985508423857224, 0.003370423168524356, 0.0010337869630847195); // k4 k5 k6
-              // assume s1 s2 s3 s4 tx ty are all zeros
+        case ArduCam1280x800:
+          ArduCam1280x240();
           break;
 
         case LifeCam320x240:
-          // 320x240 lifecam calibration from PhotonVision
-          cameraW = 320;
-          cameraH = 240;
-          fps = 30;
-          cameraFx = 353.74653217742724;
-          cameraFy = 340.77624878700817;
-          cameraCx = 163.5540798921191;
-          cameraCy = 119.8945718300403;
-          distortionCoeffs = new MatOfDouble();
+          LifeCam320x240();
           break;
 
         case LifeCam640x480:
-          // 640x480 lifecam calibration from WPILib example
-          cameraW = 640;
-          cameraH = 480;
-          fps = 30;
-          cameraFx = 699.3778103158814;
-          cameraFy = 677.7161226393544;
-          cameraCx = 345.6059345433618;
-          cameraCy = 207.12741326228522;
-          distortionCoeffs = new MatOfDouble();
+          LifeCam640x480();
           break;
 
-        default: break;
+        default:
+          System.out.println("impossible unless the enum is wrong");
+          break;
       }
 
       acquireAprilTag = new AcquireAprilTag(this);
@@ -238,6 +206,65 @@ public class ControllerVision extends CameraBase implements Runnable {
      */
     public ArrayList<RobotPose> getPoses() {
       return poses;
+    }
+
+    private void ArduCam320x240()
+    {
+      // rough calibration - wasn't done with a nice flat board
+      cameraW = 320;
+      cameraH = 240;
+      fps = 100;
+      cameraFx = 273.8682279422785;
+      cameraFy = 274.2578211409246;
+      cameraCx = 142.187975375679;
+      cameraCy = 124.6151823259089;
+      distortionCoeffs = new MatOfDouble();
+        // much of the small amount of distortion from calibration was actually the board
+        // not being smooth so don't bother using the distortion
+        // [0.03872533667096114, -0.2121025605447465, 0.00334472765894009, -0.006080540135581289, 0.4001779842036727]
+    }
+
+    private  void ArduCam1280x240()
+    {
+      // Arducam_OV9281_USB_Camera_(A?); Cameron board 1280x800      
+      cameraW = 1280;
+      cameraH = 800;
+      fps = 100;
+      cameraFx = 907.6920444758049;
+      cameraFy = 907.1513951038395;
+      cameraCx = 604.1750223777503;
+      cameraCy = 416.4609913313957;
+      distortionCoeffs = new MatOfDouble(
+          0.040354289830866516, -0.044066115475547216, 6.662818829158613E-4,9.755603732755772E-4,  // k1 k2 p1 p2
+            -0.013630390510289322, // k3
+            -0.0011985508423857224, 0.003370423168524356, 0.0010337869630847195); // k4 k5 k6
+          // assume s1 s2 s3 s4 tx ty are all zeros
+    }
+
+    private void LifeCam320x240()
+    {
+      // 320x240 lifecam calibration from PhotonVision
+      cameraW = 320;
+      cameraH = 240;
+      fps = 30;
+      cameraFx = 353.74653217742724;
+      cameraFy = 340.77624878700817;
+      cameraCx = 163.5540798921191;
+      cameraCy = 119.8945718300403;
+      distortionCoeffs = new MatOfDouble();
+    }
+
+    private void LifeCam640x480()
+    {
+      // 640x480 lifecam calibration from WPILib example
+      cameraW = 640;
+      cameraH = 480;
+      fps = 30;
+      cameraFx = 699.3778103158814;
+      cameraFy = 677.7161226393544;
+      cameraCx = 345.6059345433618;
+      cameraCy = 207.12741326228522;
+      distortionCoeffs = new MatOfDouble();
     }
 }
       // Set up Pose Estimator - parameters are for a Microsoft LifeCam HD-3000

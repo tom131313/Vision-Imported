@@ -40,11 +40,12 @@ import frc.robot.Image.AcquisitionTime;
    * Pose estimation using WPILib math on previously detected AprilTags
    * <p>The robot is clamped to the floor (Z = 0 and that code could be removed).
    * 
-   * <p>This is intended to run in an independent thread.
+   * This was intended to run in an independent thread but now in this project it
+   * shares a thread with AcquireAprilTag.
    *
-   * <p>Poses are "logged" to NetworkTables for further usage.
+   * <p>This program publishes Tags and Poses to NetworkTables table "robotsLocations".
    * 
-   * <p>Poses are drawn on the image of the AprilTag.
+   * <p>Poses are drawn on the image of the AprilTag. (easily disabled)
    * 
    * <p>It is paced by the availability of new detected tags in camera images and its
    * speed of computing poses from the detections.

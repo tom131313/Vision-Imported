@@ -119,7 +119,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
  * A Siemens Star can be used or any object at about the typical distance that the camera is to be used. Mark the lens holder where the
  * camera is focused and glue into place if it's prone to moving.
  * 
- * Autofocus sounds like a good idea but some inexpensive cameras jitter violently trying to focus continuously. Autofocus likely is
+ * <p>Autofocus sounds like a good idea but some inexpensive cameras jitter violently trying to focus continuously. Autofocus likely is
  * more harmful than helpful.
  * 
  * <p>Cameras need to be calibrated - creating a camera matrix at the desired resolution. Calibrate using PhotonVision and copy its

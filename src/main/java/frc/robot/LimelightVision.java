@@ -21,7 +21,7 @@ import frc.robot.LimelightHelpers.PoseEstimate;
 /**
  * Limelight requires significant setup using the dashboard and, somewhat, code can be used.
  * 
- * <p> the LimeLight fmap (field map) is at
+ * <p>The LimeLight fmap (field map) is at
  * https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-map-specification
  */
 
@@ -33,6 +33,9 @@ import frc.robot.LimelightHelpers.PoseEstimate;
  * changed as determined by game and team use.
  * 
  * <p>This class acquires the Limelight target data and the MegaTag and MegaTag2 robot poses in field.
+ * 
+ * <p>In addition to what Limelight publishes in NetworkTables this program publishes Limelight MegaTag
+ * and MegaTag2 and filtered robot Pose2d and Pose3d to table limelightName + "Logged".
 
  * <p>In part it is a stripped-down version of the LimelightHelpers, somewhat uses more efficient
  * access to the Limelight, uses some LimelightHelpers, and some featured examples to access and

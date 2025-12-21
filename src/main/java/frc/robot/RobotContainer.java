@@ -26,12 +26,17 @@ public class RobotContainer {
 
     public RobotContainer()
     {
+         // Caution that configDataLog and configCommandLogs may duplicate or conflict with each other.
+         // They were written assuming that the other didn't exist which in general may or may not be true.
+         // In this project they both exist so start the NT logging once as desired.
         configDataLog();
         configCommandLogs();
+
         // use VisionSelector to choose which of the 3 vision systems to use
         var visionSelector = VisionSelector.usePhotonVision;
         DriverStation.reportWarning("vision selection " + visionSelector, false);
         visionContainer = new VisionContainer(visionSelector);
+        
         configAButton();
         configBButton();
     }

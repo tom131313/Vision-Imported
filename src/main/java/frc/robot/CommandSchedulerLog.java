@@ -90,7 +90,7 @@ public class CommandSchedulerLog
             DataLogManager.logNetworkTables(true); // CAUTION - this puts all NT to the DataLog
         }
 
-        final String networkTableName = "Team4237"; //FIXME change to your favorite name
+        final String networkTableName = "CommandLog";
         m_nt = NetworkTableInstance.getDefault().getTable(networkTableName);
         m_initializeCommandLogEntry = m_nt.getStringTopic("Commands/initialize").getEntry("");
         m_interruptCommandLogEntry = m_nt.getStringTopic("Commands/interrupt").getEntry("");

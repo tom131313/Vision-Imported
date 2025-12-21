@@ -109,6 +109,14 @@ public class VisionContainer extends SubsystemBase {
       // Enter the camera location wrt the robot. Example camera mounted facing
       // forward, half a meter forward of center, quarter a meter up from center
       // pointing up 25 degrees.
+
+      // If in Simulation mode on a Windows PC:
+
+      //   If the external USB camera is plugged in at (before) boot-up time,
+      //   then it is cameraDeviceId = 0 after booting.
+
+      //   If the PC has an internal camera (common with laptops) and the
+      //   external camera is plugged in after boot-up, then the cameraDeviceId = 1.
       var cameraDeviceId = 0;
       if (ControllerVision.isAvailable(cameraDeviceId))
       {

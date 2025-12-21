@@ -22,6 +22,9 @@ import edu.wpi.first.networktables.StructPublisher;
 
 /**
  * PhotonVision requires significant setup using the dashboard and, somewhat, code can be used.
+ * 
+ * <p>In addition to what PhotonVision publishes to NetworkTables this program publishes robot
+ * Pose3d and yaw and pitch for each tag detected to table "PhotonVisionLogged".
  */
 public class PhotonVision extends CameraBase {
     static
