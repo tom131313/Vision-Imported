@@ -17,27 +17,33 @@ import java.util.stream.Collectors;
  * <p>This class could be used this way:
  *
 <pre><code>
-  // options for logging
-  private boolean useConsole            = false;
-  private boolean useDataLog            = true;
-  private boolean useShuffleBoardLog    = false;
+    // class variable
+    private CommandSchedulerLog schedulerLog;
 
-  configureCommandLogs(); // do early on otherwise log not ready for first commands
+    // constructor statements
+    // Select 1 or more different Command logging methods as desired
+    configCommandLogs(EnumSet.of(LogsSelector.useConsole, LogsSelector.useDataLog));
+    // or none
+    // configCommandLogs(EnumSet.noneOf(LogsSelector.class));
 
-  @SuppressWarnings("resource")
-  public void configureCommandLogs()
-  {
-      if (useConsole || useDataLog || useShuffleBoardLog) {
-        schedulerLog = new CommandSchedulerLog(useConsole, useDataLog, useShuffleBoardLog);
-        schedulerLog.logCommandInitialize();
-        schedulerLog.logCommandInterrupt();
-        schedulerLog.logCommandFinish();
-        schedulerLog.logCommandExecute();  // Can (optionally) generate a lot of output        
-      }
-      else {
-        new Alert("No logging", AlertType.kWarning).set(true);
-      }
-  }
+    /**
+     * Configure Command logging to Console/Terminal, DataLog, or ShuffleBoard
+     {@literal*}/
+    @SuppressWarnings("resource")
+    public void configCommandLogs(EnumSet<LogsSelector> logsSelector)
+    {
+        if (!logsSelector.isEmpty())
+         {
+            schedulerLog = new CommandSchedulerLog(logsSelector);
+            schedulerLog.logCommandInitialize();
+            schedulerLog.logCommandInterrupt();
+            schedulerLog.logCommandFinish();
+            schedulerLog.logCommandExecute();  // Can (optionally) generate a lot of output        
+        }
+        else {
+            new Alert("No logging", AlertType.kWarning).set(true);
+        }
+    }
 </code></pre>
  */
 public class CommandSchedulerLog 
