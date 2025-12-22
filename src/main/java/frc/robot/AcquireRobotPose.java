@@ -181,7 +181,6 @@ public class AcquireRobotPose {
         // Yaw is positive right and pitch is positive up.
 
         synchronized(this) { // these two values go together as one transaction
-          //FIXME maybe make an array to return with isFresh/valid and all the pose values
           // set the 3-D pose to zeros here initially
           yaw = Math.atan((tagCx - roboRIOCamera.cameraCx) / roboRIOCamera.cameraFx);
           pitch = Math.atan((roboRIOCamera.cameraCy - tagCy) / (roboRIOCamera.cameraFy / Math.cos(yaw)));
@@ -334,7 +333,6 @@ public class AcquireRobotPose {
         //           CoordinateSystem.convert(new Rotation3d(), to, from)
         //               .plus(CoordinateSystem.convert(tagInCameraFrame.getRotation(), from, to)));
         // } // end of corrected convert
-        //FIXME change this for your location of the camera on the robot
         // var // transform to camera from robot chassis center at floor level - robot specific!
         // cameraInRobotFrame = new Transform3d(       
         //       new Translation3d(0., 0., 0.), // camera at center bottom of robot

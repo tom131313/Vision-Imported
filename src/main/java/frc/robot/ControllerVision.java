@@ -22,10 +22,20 @@ import edu.wpi.first.math.geometry.Transform3d;
  * functions.
  * <p>The image is acquired from the USB camera, then any detected AprilTags are marked up on the image,
  * transformed to the robot on the field pose and sent to NetworkTables.
- * <p>The robot pose is clamped to the floor and that could be removed in AcquireRobotPose. (LimelightVision
- * setup has that option as set in the Limelight.)
+ * 
+ * <p>To remove irritating vertical (Z height) jitter the robot pose is clamped to the floor. That could
+ * be removed in AcquireRobotPose. (LimelightVision setup has that option as set in the Limelight.)
+ * 
+ * <p>There is side-to-side jitter (Y axis) especially when the camera is straight-on to the tag and there 
+ * is ambiguity on which side of the tag the camera is on. A smoothing or simple averaging of two (or more?)
+ * successive poses may yield a better result. Don't smooth out the fact that the robot might actually be
+ * moving! Filtering of the pose such as Savitzky-Golay least squares filtering might help (that's
+ * unconfirmed speculation).
+ * 
  * <p>AcquireRobotPose has no provision for using the gyro to improve pose estimation. The gyro
  * heading could be used instead of the pose rotation, if desired.
+ * 
+ * <pThere is some 
  *
  * <p>Be aware that the performance on this is much worse than a coprocessor solution!
  * 
