@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.shuffleboard.EventImportance;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
@@ -46,15 +47,15 @@ public class CommandSchedulerLog
         System.out.println("Loading: " + java.lang.invoke.MethodHandles.lookup().lookupClass().getCanonicalName());
     }
 
+    public enum LogsSelector {useConsole, useDataLog, useShuffleBoardLog};
+
     private final HashMap<String, Integer> m_currentCommands = new HashMap<String, Integer>();
     private final NetworkTable m_nt;    
     private final StringEntry m_initializeCommandLogEntry;
     private final StringEntry m_interruptCommandLogEntry;
     private final StringEntry m_finishCommandLogEntry;
     private final StringEntry m_executeCommandLogEntry;
-    private final boolean m_useConsole;
-    private final boolean m_useDataLog;
-    private final boolean m_useShuffleBoardLog;
+    private EnumSet<LogsSelector> logsSelector;
 
     /**
      * Command Event Loggers
@@ -79,14 +80,12 @@ public class CommandSchedulerLog
      * @param useDataLog
      * @param useShuffleBoardLog
      */ 
-    CommandSchedulerLog(boolean useConsole, boolean useDataLog, boolean useShuffleBoardLog)
+    CommandSchedulerLog(EnumSet<LogsSelector> logsSelector)
     {
-        m_useConsole = useConsole;
-        m_useDataLog = useDataLog;
-        m_useShuffleBoardLog = useShuffleBoardLog;
+        this.logsSelector = logsSelector;
 
         // DataLog via NT so establish NT and the connection to DataLog
-        if (useDataLog) {
+        if (logsSelector.contains(LogsSelector.useDataLog)) {
             DataLogManager.logNetworkTables(true); // CAUTION - this puts all NT to the DataLog
         }
 
@@ -111,13 +110,13 @@ public class CommandSchedulerLog
                     .map(subsystem -> subsystem.getClass().getSimpleName())
                     .collect(Collectors.joining(", ", "{", "}"));
 
-                if (m_useConsole) {
+                if (logsSelector.contains(LogsSelector.useConsole)) {
                     System.out.println("Command initialized : " + key + " " + requirements);                    
                 }
-                if (m_useDataLog) {
+                if (logsSelector.contains(LogsSelector.useDataLog)) {
                     m_initializeCommandLogEntry.set(key + " " + requirements);                    
                 }
-                if (m_useShuffleBoardLog) {
+                if (logsSelector.contains(LogsSelector.useShuffleBoardLog)) {
                     Shuffleboard.addEventMarker("Command initialized",
                         key + " " + requirements, EventImportance.kNormal);                    
                 }
@@ -148,13 +147,13 @@ public class CommandSchedulerLog
                 String key = command.getClass().getSimpleName() + "/" + command.getName();
                 String runs = " after " + m_currentCommands.getOrDefault(key, 0) + " runs " + interrupter;
 
-                if (m_useConsole) {
+                if (logsSelector.contains(LogsSelector.useConsole)) {
                     System.out.println(key + runs);                    
                 }
-                if (m_useDataLog) {
+                if (logsSelector.contains(LogsSelector.useDataLog)) {
                     m_interruptCommandLogEntry.set(key + runs);                    
                 } 
-                if (m_useShuffleBoardLog) {
+                if (logsSelector.contains(LogsSelector.useShuffleBoardLog)) {
                     Shuffleboard.addEventMarker("Command interrupted", key + runs, EventImportance.kNormal);
                 }
 
@@ -174,13 +173,13 @@ public class CommandSchedulerLog
                 String key = command.getClass().getSimpleName() + "/" + command.getName();
                 String runs = " after " + m_currentCommands.getOrDefault(key, 0) + " runs";
 
-                if (m_useConsole) {
+                if (logsSelector.contains(LogsSelector.useConsole)) {
                     System.out.println("Command finished : " + key + runs);                    
                 }
-                if (m_useDataLog) {
+                if (logsSelector.contains(LogsSelector.useDataLog)) {
                     m_finishCommandLogEntry.set(key + runs);                    
                 } 
-                if (m_useShuffleBoardLog) {
+                if (logsSelector.contains(LogsSelector.useShuffleBoardLog)) {
                     Shuffleboard.addEventMarker("Command finished", key, EventImportance.kNormal);                    
                 }
 
@@ -206,13 +205,13 @@ public class CommandSchedulerLog
 
                 if (m_currentCommands.getOrDefault(key, 0) == 0) // suppress all but first execute
                 {
-                    if (m_useConsole) {
+                    if (logsSelector.contains(LogsSelector.useConsole)) {
                         System.out.println("Command executed : " + key);                        
                     }
-                    if (m_useDataLog) {
+                    if (logsSelector.contains(LogsSelector.useDataLog)) {
                         m_executeCommandLogEntry.set(key);             
                     }
-                    if (m_useShuffleBoardLog) {
+                    if (logsSelector.contains(LogsSelector.useShuffleBoardLog)) {
                         Shuffleboard.addEventMarker("Command executed", key, EventImportance.kNormal);                        
                     }
 

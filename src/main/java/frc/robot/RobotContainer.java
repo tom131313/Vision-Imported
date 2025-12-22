@@ -1,5 +1,7 @@
 package frc.robot;
 
+import java.util.EnumSet;
+
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -8,17 +10,13 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.VisionContainer.VisionSelector;
+import frc.robot.CommandSchedulerLog.LogsSelector;
 
 public class RobotContainer {
     static
     {
         System.out.println("Loading: " + java.lang.invoke.MethodHandles.lookup().lookupClass().getCanonicalName());
     }
-
-    // Select as many different Command logging methods as desired
-    private boolean useConsole            = true;
-    private boolean useDataLog            = false;
-    private boolean useShuffleBoardLog    = false;
 
     private static VisionContainer visionContainer;
 
@@ -30,7 +28,9 @@ public class RobotContainer {
          // They were written assuming that the other didn't exist which in general may or may not be true.
          // In this project they both exist so start the NT logging once as desired.
         configDataLog();
-        configCommandLogs();
+        
+        configCommandLogs(EnumSet.of(LogsSelector.useConsole, LogsSelector.useDataLog)); // Select 1 or more different Command logging methods as desired
+        // configCommandLogs(EnumSet.noneOf(LogsSelector.class)); // or none
 
         // use VisionSelector to choose which of the 3 vision systems to use
         var visionSelector = VisionSelector.usePhotonVision;
@@ -113,10 +113,11 @@ public class RobotContainer {
      * Configure Command logging to Console/Terminal, DataLog, or ShuffleBoard
      */
     @SuppressWarnings("resource")
-    public void configCommandLogs()
+    public void configCommandLogs(EnumSet<LogsSelector> logsSelector)
     {
-        if (useConsole || useDataLog || useShuffleBoardLog) {
-            schedulerLog = new CommandSchedulerLog(useConsole, useDataLog, useShuffleBoardLog);
+        if (!logsSelector.isEmpty())
+         {
+            schedulerLog = new CommandSchedulerLog(logsSelector);
             schedulerLog.logCommandInitialize();
             schedulerLog.logCommandInterrupt();
             schedulerLog.logCommandFinish();
