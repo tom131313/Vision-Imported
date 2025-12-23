@@ -23,19 +23,21 @@ import edu.wpi.first.math.geometry.Transform3d;
  * <p>The image is acquired from the USB camera, then any detected AprilTags are marked up on the image,
  * transformed to the robot on the field pose and sent to NetworkTables.
  * 
- * <p>To remove irritating vertical (Z height) jitter the robot pose is clamped to the floor. That could
- * be removed in AcquireRobotPose. (LimelightVision setup has that option as set in the Limelight.)
+ * <p>To remove irritating vertical (Z height) jitter an example of clamping the robot pose to the floor is
+ * included in {@link AcquireRobotPose#run()}. That could be removed in AcquireRobotPose. (LimelightVision
+ * setup has that option as set in the Limelight.)
  * 
- * <p>There is side-to-side jitter (Y axis) especially when the camera is straight-on to the tag and there 
- * is ambiguity on which side of the tag the camera is on. A smoothing or simple averaging of two (or more?)
- * successive poses may yield a better result. Don't smooth out the fact that the robot might actually be
- * moving! Filtering of the pose such as Savitzky-Golay least squares filtering might help (that's
- * unconfirmed speculation).
+ * <p>Especially at distances > about 1.1 meters there is side-to-side and forward-backward jitter
+ * especially when the camera is straight-on to the tag and there is ambiguity on which side of the tag
+ * the camera is on. A smoothing or simple averaging of two (or more?) successive poses may yield a
+ * better result. Don't smooth out the fact that the robot might actually be moving.
+ * 
+ * <p>Filtering of the pose such as Savitzky-Golay least squares filtering might help (that's unconfirmed
+ * speculation). Included is an example Spike Filter that does give improved performance for both X and Y
+ * axes. See {@link AcquireRobotPose} to remove or tune them better for another environment.
  * 
  * <p>AcquireRobotPose has no provision for using the gyro to improve pose estimation. The gyro
  * heading could be used instead of the pose rotation, if desired.
- * 
- * <pThere is some 
  *
  * <p>Be aware that the performance on this is much worse than a coprocessor solution!
  * 

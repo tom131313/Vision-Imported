@@ -65,27 +65,28 @@ public class AcquireRobotPose {
   AcquisitionTime acquisitionTime;
   int lastFrameRead = 0;
   ArrayList<Long> tags = new ArrayList<>(AprilTagsLocations.getTagCount()); // tags detected in this camera frame
-  
-    // Instantiate once
-    // We'll output to NT
 
-    NetworkTable robotsTable = NetworkTableInstance.getDefault().getTable("robotsLocations");
-    IntegerArrayPublisher pubTagsDetected = robotsTable.getIntegerArrayTopic("tagsDetected").publish();
-    List<StructPublisher<Pose3d>> publishRobotPose = new ArrayList<>(AprilTagsLocations.getTagCount());
-      
-    double tagSize = 0.1651; // meters of the targeted AprilTag
+  // Instantiate once
+  // We'll output to NT
 
-      ArrayList<RobotPose> poses = new ArrayList<>(30);
-      ArrayList<RobotPose> posesLastFrame = new ArrayList<>(30);
-      Scalar outlineColor = new Scalar(0, 255, 0); // bgr
-      Scalar crossColor = new Scalar(0, 0, 255); // bgr
-      int crossLength = 10;
-      Mat outImage = new Mat(); // this will receive the stored image's Mat
-      int latency = 0;
-      CvSource outputStream;
-      double yaw;
-      double pitch;
-      AprilTagPoseEstimator estimator;
+  private NetworkTable robotsTable = NetworkTableInstance.getDefault().getTable("robotsLocations");
+  private IntegerArrayPublisher pubTagsDetected = robotsTable.getIntegerArrayTopic("tagsDetected").publish(); // tag ids in frame
+  private List<StructPublisher<Pose3d>> publishRobotPose = new ArrayList<>(AprilTagsLocations.getTagCount()); // robot pose from every possible tag
+    
+  private double tagSize = 0.1651; // meters of the targeted AprilTag
+
+  private ArrayList<RobotPose> poses = new ArrayList<>(30);
+  private ArrayList<RobotPose> posesLastFrame = new ArrayList<>(30);
+  private Scalar outlineColor = new Scalar(0, 255, 0); // bgr
+  private Scalar crossColor = new Scalar(0, 0, 255); // bgr
+  private int crossLength = 10;
+  private Mat outImage = new Mat(); // this will receive the stored image's Mat
+  private CvSource outputStream;
+  private double yaw;
+  private double pitch;
+  private AprilTagPoseEstimator estimator;
+  private ArrayList<SpikeFilter> xSpikeFilter = new ArrayList<>(30);
+  private ArrayList<SpikeFilter> ySpikeFilter = new ArrayList<>(30);
 
   public AcquireRobotPose(ControllerVision roboRIOCamera, boolean usePose3D, Transform3d cameraInRobotFrame /*robotToCamera*/)
   {
@@ -104,26 +105,25 @@ public class AcquireRobotPose {
 
     acquisitionTime = roboRIOCamera.image.new AcquisitionTime(); // this will receive the stored image's acquisition time
   
-      // Setup a CvSource. This will send images back to the Dashboard
-      outputStream = CameraServer.putVideo("Detected", roboRIOCamera.cameraW, roboRIOCamera.cameraH); // http://10.42.37.2:1182/  http://roborio-4237-frc.local:1182/?action=stream
-  
-      Config poseEstConfig =
-          new AprilTagPoseEstimator.Config( tagSize, roboRIOCamera.cameraFx, roboRIOCamera.cameraFy, roboRIOCamera.cameraCx, roboRIOCamera.cameraCy);
-  
-      estimator = new AprilTagPoseEstimator(poseEstConfig);
+    // Setup a CvSource. This will send images back to the Dashboard
+    outputStream = CameraServer.putVideo("Detected", roboRIOCamera.cameraW, roboRIOCamera.cameraH); // http://10.42.37.2:1182/  http://roborio-4237-frc.local:1182/?action=stream
 
-      Consumer<AprilTag> initializeRobotPosePublishers = tag ->
-      {
-          var robotPosePublisher = robotsTable.getStructTopic("robotPose3D_" + tag.ID, Pose3d.struct).publish();
-          publishRobotPose.add(robotPosePublisher);
-      };
+    Config poseEstConfig =
+        new AprilTagPoseEstimator.Config( tagSize, roboRIOCamera.cameraFx, roboRIOCamera.cameraFy, roboRIOCamera.cameraCx, roboRIOCamera.cameraCy);
+
+    estimator = new AprilTagPoseEstimator(poseEstConfig);
+
+    Consumer<AprilTag> initializeRobotPosePublishers = tag ->
+    {
+        var robotPosePublisher = robotsTable.getStructTopic("robotPose3D_" + tag.ID, Pose3d.struct).publish();
+        publishRobotPose.add(robotPosePublisher); // no tag 0 so tag 1 will be index 0 in the list
+        
+        // 2 is good for distant poses and 1 for near poses; straight-on tag-robot alignment has a lot of jitter if afar
+        xSpikeFilter.add(new SpikeFilter(.15, 9999., 2));
+        ySpikeFilter.add(new SpikeFilter(.15, 9999., 2));
+    };
 
     AprilTagsLocations.getTagsLocations().forEach(initializeRobotPosePublishers);
-
-    // // make an empty bucket for every possible tag; assume id = 0 to count-1
-    // for (int tag = 0; tag < AprilTagsLocations.getTagCount()-1; tag++) {
-    //   publishRobotPose.add(null);
-    // }
   }
 
   /**
@@ -139,7 +139,9 @@ public class AcquireRobotPose {
       for (AprilTagDetection detection : detections) {
         Pose3d tagInFieldFrame; // pose from WPILib resource or custom pose file
 
-        if(AprilTagsLocations.getTagsLocations().size() >= detection.getId() && detection.getDecisionMargin() > 50.) // -1 ouch!; margin < 20 seems bad; margin > 120 are good
+        if (AprilTagsLocations.getTagsLocations().size() >= detection.getId() && // tag 1 is index 0 (-1 ouch!)
+            detection.getDecisionMargin() > 50. && // margin < 20 seems bad; margin > 120 are good
+            detection.getId() != 0) // tag 0 not used - it's invalid for FRC
         {
           tagInFieldFrame = AprilTagsLocations.getTagLocation(detection.getId());
         }
@@ -180,7 +182,8 @@ public class AcquireRobotPose {
         // Yaw and pitch must be calculated together to account for perspective distortion.
         // Yaw is positive right and pitch is positive up.
 
-        synchronized(this) { // these two values go together as one transaction
+        /*synchronized(this)*/ // no longer needed since there is one for the robotPose
+        { // these two values go together as one transaction
           // set the 3-D pose to zeros here initially
           yaw = Math.atan((tagCx - roboRIOCamera.cameraCx) / roboRIOCamera.cameraFx);
           pitch = Math.atan((roboRIOCamera.cameraCy - tagCy) / (roboRIOCamera.cameraFy / Math.cos(yaw)));
@@ -353,11 +356,22 @@ public class AcquireRobotPose {
         // there is a lot of jitter at longer distances with this algorithm. Much of it is in the Z (height) axis so clamping to the floor
         // makes the pose look better and is (usually) more accurate. It is unlikely the Z value is used except maybe for 3-D distance to
         // a target.
-        robotInFieldFrame = robotInFieldFrame.transformBy(new Transform3d(0., 0., -robotInFieldFrame.getZ(), Rotation3d.kZero)); // clamp to floor
+        // robotInFieldFrame = robotInFieldFrame.transformBy(new Transform3d(0., 0., -robotInFieldFrame.getZ(), Rotation3d.kZero)); // clamp to floor
 
         // similarly there may be improved accuracy by clamping to the gyro heading. Some teams use the X-Y values and get the rotation from the gyro.
         // This class code does not do any validation or value replacement using the gyro. It could be added here or done downstream if desired.
 
+        // rudimentary filtering of jitter; clamp to floor and remove x and y spikes
+        // could also change heading to the gyro heading but there is no gyro in this project except the fake 0 heading for alignment commands
+
+        var xNoSpikes = xSpikeFilter.get(detection.getId() - 1).calculate(robotInFieldFrame.getX()); // ouch! tags 1 to 22 in list positions 0 to 21
+        var yNoSpikes = ySpikeFilter.get(detection.getId() - 1).calculate(robotInFieldFrame.getY());
+        var zClampedToFloor = 0.;
+        // System.out.println(detection.getId() + " (" + robotInFieldFrame.getX() + ", " + xNoSpikes +
+        //                                       ") (" + robotInFieldFrame.getY() + ", " + yNoSpikes +
+        //                                       ") (" + robotInFieldFrame.getZ() + ", " + zClampedToFloor + ")");
+        robotInFieldFrame = new Pose3d(xNoSpikes, yNoSpikes, zClampedToFloor, robotInFieldFrame.getRotation());      
+      
         // end transforms to get the robot pose from this vision tag pose
         poses.add(new RobotPose(detection.getId(), yaw, pitch, robotInFieldFrame));
 
@@ -365,7 +379,7 @@ public class AcquireRobotPose {
         SmartDashboard.putNumber("detectionDecisionMargin " + detection.getId(), detection.getDecisionMargin());
 
         // put out to NetworkTables tag and robot pose for this tag in AdvantageScope format
-        publishRobotPose.get(detection.getId() - 1).set(robotInFieldFrame); // ouch! tag 1 to 22 in list positions 0 to 21
+        publishRobotPose.get(detection.getId() - 1).set(robotInFieldFrame); // ouch! tags 1 to 22 in list positions 0 to 21
       }
       else {
         poses.add(new RobotPose(detection.getId(), yaw, pitch, Pose3d.kZero));
