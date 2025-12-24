@@ -125,6 +125,11 @@ public class AcquireRobotPose {
    */
   public void run() {
 
+      if ( ! roboRIOCamera.image.isFreshImage())
+      {
+        return;
+      }
+
       AprilTagDetection[] detections = roboRIOCamera.image.getImage(outImage, acquisitionTime); // get the stored image w/ detections
 
       tags.clear(); // have not seen any tags yet

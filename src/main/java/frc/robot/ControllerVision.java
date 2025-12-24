@@ -32,6 +32,12 @@ import edu.wpi.first.math.geometry.Transform3d;
  * the camera is on. A smoothing or simple averaging of two (or more?) successive poses may yield a
  * better result. Don't smooth out the fact that the robot might actually be moving.
  * 
+ * <p>The camera image whiteness (contrast, gamma, brightness, exposure, gain) and sharpness have a
+ * huge effect on jitter. These settings all interact so experiment. Often an image slightly
+ * darker than what humans may find comfortable is about right. Try high exposure, high brightness,
+ * low gain, low gamma, high contrast. Too bad high exposure is the opposite of what is needed for
+ * high frame rate.
+ * 
  * <p>Included is an example Spike Filter that does give improved performance for both X and Y
  * axes. See {@link AcquireRobotPose} to remove or tune them better for another environment.
  * 
