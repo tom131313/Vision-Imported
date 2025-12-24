@@ -23,6 +23,9 @@ import edu.wpi.first.wpilibj.Filesystem;
  * <p>Tag locations on the field are used to calculate robot locations on the field given the robot location wrt the tag.
  * 
  * <p>The tag locations are published to NetworkTables and may be displayed with AdvantageScope.
+ * 
+ * <p>Throughout this project Lists assume there is no tag 0 so tag 1 becomes list index 0. Also, it is assumed that the tag
+ * numbers are continuously numbered from 1 to size of list. If there are gaps, then a lot of things break in this project.
  */
 public class AprilTagsLocations
  {      

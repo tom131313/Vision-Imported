@@ -66,9 +66,7 @@ public class AcquireRobotPose {
   int lastFrameRead = 0;
   ArrayList<Long> tags = new ArrayList<>(AprilTagsLocations.getTagCount()); // tags detected in this camera frame
 
-  // Instantiate once
   // We'll output to NT
-
   private NetworkTable robotsTable = NetworkTableInstance.getDefault().getTable("robotsLocations");
   private IntegerArrayPublisher pubTagsDetected = robotsTable.getIntegerArrayTopic("tagsDetected").publish(); // tag ids in frame
   private List<StructPublisher<Pose3d>> publishRobotPose = new ArrayList<>(AprilTagsLocations.getTagCount()); // robot pose from every possible tag
@@ -90,10 +88,6 @@ public class AcquireRobotPose {
 
   public AcquireRobotPose(ControllerVision roboRIOCamera, boolean usePose3D, Transform3d cameraInRobotFrame /*robotToCamera*/)
   {
-    // Set up Pose Estimator - parameters included for a Microsoft Lifecam HD-3000
-    // and rough estimates for an ArduCam UC-844
-    // (https://www.chiefdelphi.com/t/wpilib-apriltagdetector-sample-code/421411/21)
-
     // Tag positions
     // tag rotation is CCW looking down on field from the ceiling.
     // rotating around Z, 0 degrees is parallel to Y and facing down field or +X. 30 degrees is still
@@ -108,6 +102,7 @@ public class AcquireRobotPose {
     // Setup a CvSource. This will send images back to the Dashboard
     outputStream = CameraServer.putVideo("Detected", roboRIOCamera.cameraW, roboRIOCamera.cameraH); // http://10.42.37.2:1182/  http://roborio-4237-frc.local:1182/?action=stream
 
+    // Set up Pose Estimator
     Config poseEstConfig =
         new AprilTagPoseEstimator.Config( tagSize, roboRIOCamera.cameraFx, roboRIOCamera.cameraFy, roboRIOCamera.cameraCx, roboRIOCamera.cameraCy);
 
@@ -117,10 +112,9 @@ public class AcquireRobotPose {
     {
         var robotPosePublisher = robotsTable.getStructTopic("robotPose3D_" + tag.ID, Pose3d.struct).publish();
         publishRobotPose.add(robotPosePublisher); // no tag 0 so tag 1 will be index 0 in the list
-        
-        // 2 is good for distant poses and 1 for near poses; straight-on tag-robot alignment has a lot of jitter if afar
-        xSpikeFilter.add(new SpikeFilter(.15, 9999., 2));
-        ySpikeFilter.add(new SpikeFilter(.15, 9999., 2));
+
+        xSpikeFilter.add(new SpikeFilter(0.05, 9999., 1));
+        ySpikeFilter.add(new SpikeFilter(0.05, 9999., 1));
     };
 
     AprilTagsLocations.getTagsLocations().forEach(initializeRobotPosePublishers);
@@ -135,6 +129,7 @@ public class AcquireRobotPose {
 
       tags.clear(); // have not seen any tags yet
       poses.clear();
+
       // loop to get all AprilTag detections within current camera frame
       for (AprilTagDetection detection : detections) {
         Pose3d tagInFieldFrame; // pose from WPILib resource or custom pose file
@@ -353,30 +348,33 @@ public class AcquireRobotPose {
         // the above transforms match LimeLight Vision botpose_wpiblue network tables entries
         // as they display in AdvantageScope 3D Field robotInFieldFrame
 
-        // there is a lot of jitter at longer distances with this algorithm. Much of it is in the Z (height) axis so clamping to the floor
-        // makes the pose look better and is (usually) more accurate. It is unlikely the Z value is used except maybe for 3-D distance to
-        // a target.
-        // robotInFieldFrame = robotInFieldFrame.transformBy(new Transform3d(0., 0., -robotInFieldFrame.getZ(), Rotation3d.kZero)); // clamp to floor
+        // There is a lot of jitter at longer distances with this algorithm especially if the camera is poorly placed straight-on
+        // to the tag. Much of the jitter is in the Pose3d components that are not used in Pose2d which is what is commonly needed
+        // for targeting. Zeroing out those "extra" components makes the robot look a lot better in AdvantageScope Field3d. Clamping
+        // the robot to the floor (Z, height) is also an option in the LimelightVision product. It is unlikely the Z value is used
+        // except maybe for 3-D distance to a target.
+        // A spike filter can remove the worst spasms with distant, head-on views.
 
-        // similarly there may be improved accuracy by clamping to the gyro heading. Some teams use the X-Y values and get the rotation from the gyro.
-        // This class code does not do any validation or value replacement using the gyro. It could be added here or done downstream if desired.
-
-        // rudimentary filtering of jitter; clamp to floor and remove x and y spikes
-        // could also change heading to the gyro heading but there is no gyro in this project except the fake 0 heading for alignment commands
+        // Some teams use the X-Y values and get the rotation from the gyro. This class code does not do any validation or value
+        // replacement using the gyro except the fake 0 heading for alignment commands. It could be added here or done downstream if desired.
 
         var xNoSpikes = xSpikeFilter.get(detection.getId() - 1).calculate(robotInFieldFrame.getX()); // ouch! tags 1 to 22 in list positions 0 to 21
-        var yNoSpikes = ySpikeFilter.get(detection.getId() - 1).calculate(robotInFieldFrame.getY());
-        var zClampedToFloor = 0.;
-        // System.out.println(detection.getId() + " (" + robotInFieldFrame.getX() + ", " + xNoSpikes +
-        //                                       ") (" + robotInFieldFrame.getY() + ", " + yNoSpikes +
-        //                                       ") (" + robotInFieldFrame.getZ() + ", " + zClampedToFloor + ")");
-        robotInFieldFrame = new Pose3d(xNoSpikes, yNoSpikes, zClampedToFloor, robotInFieldFrame.getRotation());      
+        var yNoSpikes = ySpikeFilter.get(detection.getId() - 1).calculate(robotInFieldFrame.getY());    
+        var zAngle = robotInFieldFrame.getRotation().getZ();
+        // a slight fallacy here is what if X or Y but not both had spikes removed? Then they don't go together anymore.
+        // Could save the previous values of all 3 and if one was replaced by previous value, then all should be.
+        // Or just skip this tag. Would need to remove it from the tags list.
+
+        var clampedToZero = 0.;
+
+        robotInFieldFrame = new Pose3d(xNoSpikes, yNoSpikes, clampedToZero, // essentially make Pose2d from Pose3d and remove spikes
+                            new Rotation3d(clampedToZero, clampedToZero, zAngle));
       
-        // end transforms to get the robot pose from this vision tag pose
+        // end of transforms to get the robot pose from this vision tag pose
         poses.add(new RobotPose(detection.getId(), yaw, pitch, robotInFieldFrame));
 
         // put detection and pose information on dashboards
-        SmartDashboard.putNumber("detectionDecisionMargin " + detection.getId(), detection.getDecisionMargin());
+        // SmartDashboard.putNumber("detectionDecisionMargin " + detection.getId(), detection.getDecisionMargin());
 
         // put out to NetworkTables tag and robot pose for this tag in AdvantageScope format
         publishRobotPose.get(detection.getId() - 1).set(robotInFieldFrame); // ouch! tags 1 to 22 in list positions 0 to 21

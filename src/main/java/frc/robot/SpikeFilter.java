@@ -89,6 +89,7 @@ class SpikeFilter {
             c < n)
         { // large change; use previous good value
             c++; // count number of times large change
+            // System.out.print("*");
             return prevInput;
         }
         else { // normal input or large change is holding

@@ -202,8 +202,7 @@ public class AlignToReefTagRelativeArcade2D extends Command {
      * <p>There must be significant height difference for this to work accurately. Slight jitter in the
      * pitch causes a lot of jitter in the distance calculation (tangent function). If it doesn't work,
      * then try a lookup table of hand measured values but that still suffers exactly the same problem.
-     * Filtering of the distance signal such as Savitzky-Golay least squares filtering might help (that's
-     * unconfirmed speculation).
+     * Filtering of the distance signal might help (that's unconfirmed speculation).
      * 
      * A better distance measurement would come from a proper distance sensor such as the analog mode
      * (at least for 2026) of https://swyftrobotics.com/products/swyft-ranger-distance-sensor

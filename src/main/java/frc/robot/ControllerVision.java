@@ -32,8 +32,7 @@ import edu.wpi.first.math.geometry.Transform3d;
  * the camera is on. A smoothing or simple averaging of two (or more?) successive poses may yield a
  * better result. Don't smooth out the fact that the robot might actually be moving.
  * 
- * <p>Filtering of the pose such as Savitzky-Golay least squares filtering might help (that's unconfirmed
- * speculation). Included is an example Spike Filter that does give improved performance for both X and Y
+ * <p>Included is an example Spike Filter that does give improved performance for both X and Y
  * axes. See {@link AcquireRobotPose} to remove or tune them better for another environment.
  * 
  * <p>AcquireRobotPose has no provision for using the gyro to improve pose estimation. The gyro
