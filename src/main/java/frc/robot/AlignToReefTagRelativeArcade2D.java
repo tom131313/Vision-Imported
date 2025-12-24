@@ -199,16 +199,16 @@ public class AlignToReefTagRelativeArcade2D extends Command {
      * That's inconsistent with camera positions that are best for 3-D pose estimation where the camera
      * should be at least a small angle to the side of a target in addition to being at different heights.
      * 
-     * <p>There must be significant height difference for this to work accurately. Slight jitter in the
-     * pitch causes a lot of jitter in the distance calculation (tangent function). If it doesn't work,
-     * then try a lookup table of hand measured values but that still suffers exactly the same problem.
-     * Filtering of the distance signal might help (that's unconfirmed speculation).
+     * <p>There must be significant height difference for this to work accurately especially if far from the
+     * target. Slight jitter in the pitch from robot movement causes a lot of jitter in the distance
+     * calculation if far from the target and little difference between the camera height and the target height
+     * (tangent function). Accuracy improves as the robot approaches the target.
      * 
-     * A better distance measurement would come from a proper distance sensor such as the analog mode
-     * (at least for 2026) of https://swyftrobotics.com/products/swyft-ranger-distance-sensor
+     * For low targets a better distance measurement may come from a proper distance sensor such as the
+     * analog mode (at least for 2026) of https://swyftrobotics.com/products/swyft-ranger-distance-sensor .
      * 
-     * A distance sensor may respond more quickly than a camera - a lot of variation in the speed of
-     * cameras and distance sensors. The SWYFT is 2.5 Hz to 15 Hz which is much slower than or about
+     * A distance sensor may or may not respond more quickly than a camera; there's a lot of variation in the
+     * speed of cameras and distance sensors. The SWYFT is 2.5 Hz to 15 Hz which is much slower than or about
      * as fast as cameras. PhotonVision and LimelightVision may be substantially faster than this.
      *
      * @param cameraHeight height of the camera off the floor in meters.
@@ -229,19 +229,21 @@ public class AlignToReefTagRelativeArcade2D extends Command {
                / Math.tan(cameraPitch + targetPitch); // total angle with the floor
     }
 
-    // // look-up-table alternative to distanceToTarget() may be slightly more accurate but much less flexible and much harder to use.
+    // // Some teams use a look-up-table alternative to using the tangent function in
+    // // distanceToTarget().
+    // // Since many hand measurements must be made and recorded and changed if the
+    // // camera mount is changed, it is much harder to use.
     // // It still suffers if the camera and target are at about the same height.
     // distanceToTarget = new InterpolatingDoubleTreeMap();
     // // example degrees pitch to meters distance
-    // // make your measurements to put enough points for linear interpolation to be accurate
+    // // make enough measurements for linear interpolation to be accurate
     // distanceToTarget.put(-6., 1.5);
     // distanceToTarget.put(0., 0.5);
     // distanceToTarget.put(9., 0.25);
 
-    // // SWYFT analog distance sensor
+    // // Some teams use distance sensors. One example is the SWYFT analog distance sensor
     // AnalogInput distanceSensor = new AnalogInput(0);
     // distanceToTarget =  distanceSensor.getVoltage()*32.50930976)-2.695384202);
-
 
     /** Simulate (extremely badly) the drivetrain.driveRobotRelative to test this                
      * Robot Centric Orientation (not Field centric)
