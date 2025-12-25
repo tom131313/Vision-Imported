@@ -33,7 +33,7 @@ public class RobotContainer {
         // configCommandLogs(EnumSet.noneOf(LogsSelector.class)); // or none
 
         // use VisionSelector to choose which of the 3 vision systems to use
-        var visionSelector = VisionSelector.usePhotonVision;
+        var visionSelector = VisionSelector.useControllerVision;//.usePhotonVision;
         DriverStation.reportWarning("vision selection " + visionSelector, false);
         visionContainer = new VisionContainer(visionSelector);
         
@@ -84,18 +84,23 @@ public class RobotContainer {
 
     /**
      * Select what to log with WPILib datalog
+     * <p>Logging to internal drive can cause insufficient space eventually.
+     * Plug in a FAT32 USB drive for better space usage.
      */
     public static void configDataLog()
     {
-        // logging to internal drive can cause insufficient space eventually.
-        // plugin a FAT32 USB drive for better space usage.
         DataLogManager.start(); // default is log all NT
 
         // partial example (commented out) on how to select what to log
+
         // DataLogManager.logNetworkTables(false);
+
         // var dataLog = DataLogManager.getLog();
-        // var networkTableInstance = NetworkTableInstance.getDefault();
+
         // DriverStation.startDataLog(dataLog, true);
+
+        // var networkTableInstance = NetworkTableInstance.getDefault();
+
         // networkTableInstance.startEntryDataLog(dataLog, "/FMSInfo", "NT:/FMSInfo");
         // networkTableInstance.startEntryDataLog(dataLog, "/" + Constants.NETWORK_TABLE_NAME, "NT:/" + Constants.NETWORK_TABLE_NAME);
         // networkTableInstance.startEntryDataLog(dataLog, "/" + Constants.ADVANTAGE_SCOPE_TABLE_NAME, "NT:/" + Constants.ADVANTAGE_SCOPE_TABLE_NAME);
@@ -115,7 +120,7 @@ public class RobotContainer {
     @SuppressWarnings("resource")
     public void configCommandLogs(EnumSet<LogsSelector> logsSelector)
     {
-        if (!logsSelector.isEmpty())
+        if ( ! logsSelector.isEmpty())
          {
             schedulerLog = new CommandSchedulerLog(logsSelector);
             schedulerLog.logCommandInitialize();

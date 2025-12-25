@@ -1,8 +1,9 @@
 package frc.robot;
 
-// Predicts current value from window of history and requested rejection criteria.
+/**
+<pre>
+Predicts current value from window of history and requested rejection criteria.
 
-/*
 https://gregstanleyandassociates.com/whitepapers/FaultDiagnosis/Filtering/Spike-Filter/spike-filter.htm
 
 Overview of spike filtering
@@ -31,7 +32,7 @@ In this form, the filter stores its previous output and a counter c for the numb
 
 An example implementation of a spike filter
 FilterFor a "pseudocode" implementation example, we use the filter notation already introduced:
-
+<code>
  IF  ( | (x(k) – y(k-1) ) > M |    AND  c < n    )  { 
       // recent big change:  hold previous safe value
        c = c+1
@@ -41,7 +42,7 @@ FilterFor a "pseudocode" implementation example, we use the filter notation alre
       c = 0
       y(k) = x(k)
 }
-
+</code>
 where
 x(k) is the raw input at time step k
 y(k) is the spike-filtered output at time step k
@@ -50,11 +51,10 @@ c counts how many times in a row the input values have been outside the legal ra
 Since extreme changes may result from failures, or result from sudden setpoint changes made during plant upsets
 (and sample intervals may be fairly slow), n will not typically be greater than 1 or 2, or diagnosis could be
 significantly delayed.  The n= 0 case is included so that spike filtering may be easily turned off.
- 
 
 Copyright 2010 - 2020, Greg Stanley
+</pre>
 */
-
 class SpikeFilter {
     private double Mabsolute; // max absolute difference between 2 values
     private double Mratio; // max absolute ratio of difference between 2 values / previous value
@@ -89,7 +89,7 @@ class SpikeFilter {
             c < n)
         { // large change; use previous good value
             c++; // count number of times large change
-            // System.out.print("*");
+            System.out.print("*");
             return prevInput;
         }
         else { // normal input or large change is holding

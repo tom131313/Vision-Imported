@@ -78,7 +78,9 @@ public class ControllerVision extends CameraBase implements Runnable {
     int cameraDeviceId;
 
     // Calibrate the camera at the used resolution or scale Fx,Fy,Cx,Cy proportional
-    // to what resolution was used for camera calibration.
+    // to what resolution was used for camera calibration. (But apparently recalibrating
+    // at various resolutions does yield slightly varying results.)
+
     int cameraW; // image width
     int cameraH; // image height
     int fps;     // frames/second
@@ -274,6 +276,7 @@ public class ControllerVision extends CameraBase implements Runnable {
     private void LifeCam640x480()
     {
       // 640x480 lifecam calibration from WPILib example
+     // and https://www.chiefdelphi.com/t/wpilib-apriltagdetector-sample-code/421411/21
       cameraW = 640;
       cameraH = 480;
       fps = 30;
@@ -284,13 +287,7 @@ public class ControllerVision extends CameraBase implements Runnable {
       distortionCoeffs = new MatOfDouble();
     }
 }
-      // Set up Pose Estimator - parameters are for a Microsoft LifeCam HD-3000
-      // (https://www.chiefdelphi.com/t/wpilib-apriltagdetector-sample-code/421411/21)
-      
-      // theoretically the resolution factor also directly effects the other camera parameters
-      // but apparently recalibrating at various resolutions does yield slightly varying results.
-
-      //opencv tutorial example
-      // https://www.wolframalpha.com/input/?i=plot (1 + -4.1802327176423804e-001 Power[\(40)Divide[r,6.5746697944293521e+002]\(41),2] + 5.0715244063187526e-001 Power[\(40)Divide[r,6.5746697944293521e+002]\(41),4] + -5.7843597214487474e-001*Power[\(40)Divide[r,6.5746697944293521e+002]\(41),6]) 
-      // all times r
-      // for r from 0 to 400
+//opencv tutorial example
+// https://www.wolframalpha.com/input/?i=plot (1 + -4.1802327176423804e-001 Power[\(40)Divide[r,6.5746697944293521e+002]\(41),2] + 5.0715244063187526e-001 Power[\(40)Divide[r,6.5746697944293521e+002]\(41),4] + -5.7843597214487474e-001*Power[\(40)Divide[r,6.5746697944293521e+002]\(41),6]) 
+// all times r
+// for r from 0 to 400

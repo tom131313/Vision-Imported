@@ -113,6 +113,8 @@ public class AcquireRobotPose {
         var robotPosePublisher = robotsTable.getStructTopic("robotPose3D_" + tag.ID, Pose3d.struct).publish();
         publishRobotPose.add(robotPosePublisher); // no tag 0 so tag 1 will be index 0 in the list
 
+        // these spike filters remove only the very worst spikes in pose jitter apparent further than about 3
+        // meters from the tag and especially with straight-on poses which are poor camera mount positions.
         xSpikeFilter.add(new SpikeFilter(0.05, 9999., 1));
         ySpikeFilter.add(new SpikeFilter(0.05, 9999., 1));
     };
@@ -366,7 +368,8 @@ public class AcquireRobotPose {
         var xNoSpikes = xSpikeFilter.get(detection.getId() - 1).calculate(robotInFieldFrame.getX()); // ouch! tags 1 to 22 in list positions 0 to 21
         var yNoSpikes = ySpikeFilter.get(detection.getId() - 1).calculate(robotInFieldFrame.getY());    
         var zAngle = robotInFieldFrame.getRotation().getZ();
-        // a slight fallacy here is what if X or Y but not both had spikes removed? Then they don't go together anymore.
+        // A fallacy here is what if X or Y but not both had spikes removed? Then they don't go together anymore here or in
+        // the history of previous value saved in the spike remover. They are re-synched with the next non-spiky iteration.
         // Could save the previous values of all 3 and if one was replaced by previous value, then all should be.
         // Or just skip this tag. Would need to remove it from the tags list.
 
@@ -415,6 +418,7 @@ public class AcquireRobotPose {
      * Get the pose of the camera wrt the AprilTag.
      * <p>This is running in an asynchronous thread so what is returned is the last completed
      * calculation and a new calculation that may be in progress does not effect these data.
+     * <p>Lock the list while it's being read so updates can't happen simultaneously
      * @return poses in the frame or null if no new poses since last getPoses() call
      */
     public synchronized ArrayList<RobotPose> getPoses()
@@ -426,7 +430,6 @@ public class AcquireRobotPose {
       else
       {
         lastFrameRead = acquisitionTime.frameNumber;
-         // lock the list while it's being read so updates can't happen simultaneously
         return new ArrayList<RobotPose>(posesLastFrame); // create new list object for others to use while this one might be updated
       }
     }

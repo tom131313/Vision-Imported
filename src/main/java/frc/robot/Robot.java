@@ -113,6 +113,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
  *   Robot.java                              CV, PV, LV
  *   RobotContainer.java                     CV, PV, LV
  *   RobotPose.java                          CV, PV, LV
+ *   SpikeFilter.java                        CV
  *   VisionContainer.java                    CV, PV, LV (four cases of the two undesired vision processes may be removed)
  * 
  * <p>Cameras that allow manual focus must be checked and focused. It's easy to focus a camera by eye or use the Limelight focus pipeline.
