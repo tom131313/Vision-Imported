@@ -33,7 +33,7 @@ public class RobotContainer {
         // configCommandLogs(EnumSet.noneOf(LogsSelector.class)); // or none
 
         // use VisionSelector to choose which of the 3 vision systems to use
-        var visionSelector = VisionSelector.useControllerVision;//.usePhotonVision;
+        var visionSelector = VisionSelector.usePhotonVision;
         DriverStation.reportWarning("vision selection " + visionSelector, false);
         visionContainer = new VisionContainer(visionSelector);
         

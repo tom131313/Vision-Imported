@@ -25,6 +25,18 @@ import edu.wpi.first.networktables.StructPublisher;
  * 
  * <p>In addition to what PhotonVision publishes to NetworkTables this program publishes robot
  * Pose3d and yaw and pitch for each tag detected to table "PhotonVisionLogged".
+ * 
+ * <p>PV always returns a 3-D pose even if it not activated by calibrating the camera and selecting
+ * 3-D Processing Mode on the PV dashboard. That condition is not checked for in this project and
+ * calls to get the 3-D pose return zero Transform3d from camera to tag plus the tag and camera
+ * offsets.
+ * <p>In a PV only environment this "hack" can help verify 2-D or 3-D mode in {@link #getPose3d()}:
+ * <pre><code>
+ *       if (tagInCameraFrame.equals(Transform3d.kZero))
+ *    {
+ *       System.out.println("PV camera to tag is zero; maybe 3-D in PV not on");
+ *    }
+ *</code></pre> 
  */
 public class PhotonVision extends CameraBase {
     static
