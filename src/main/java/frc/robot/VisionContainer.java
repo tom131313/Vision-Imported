@@ -100,7 +100,8 @@ public class VisionContainer extends SubsystemBase {
 
       // "usePose3D" determines if the time consuming calculation for 3-D pose is performed.
       // If this setting is "false", then only the pitch and yaw of the robot wrt the AprilTag is
-      // available and can they can be used for what LimeLight describes as "servoing" mode.
+      // available and can they can be used for what LimeLight describes as "servoing" mode. Note
+      // that the Pose3d is still "available" but it's value is zero (origin; not useful).
       // roboRIO v1 can do Pose3D but little time is left for other processes.
       // v1 memory limits AprilTag bitsCorrected to 1 error bit (up to 2 on roboRIO v2)
 

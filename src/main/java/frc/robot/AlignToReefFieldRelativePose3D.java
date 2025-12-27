@@ -141,6 +141,13 @@ public class AlignToReefFieldRelativePose3D extends Command {
       return;
     }    
 
+    if (pose.pose3D.equals(Pose3d.kZero)) // make sure there is 3-D vision
+    {
+      System.out.println("Oops! 3-D processing mode not activated in selected vision system");
+      bail = true;
+      return;
+    }
+
     System.out.println("pose error " + (target.getX()-pose.pose3D.getX()) + " " + (target.getY()-pose.pose3D.getY()) + " "  + (target.getRotation().getZ()-pose.pose3D.getRotation().getZ()));
 
     xSpeed = xController.calculate(pose.pose3D.getX());
