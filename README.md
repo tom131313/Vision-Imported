@@ -1,50 +1,77 @@
-## This Project utilizes FRC-related vision systems to detect and decode AprilTags in order to compute the robot position and drive to selected game targets.
+# FRC AprilTag Vision Examples
 
-### It is intended as a quick start for FRC teams relatively new to AprilTag and robot pose calculations. Purchased equipment can yield best results but a free solution (plus a $50 USB camera) is provided (pure use of WPILib classes).
+Quick start for FRC teams learning AprilTag detection and robot pose estimation. Detects AprilTags, computes robot position, and drives to game targets.
 
-This project is a wrapper called VisionContainer for the included three lower level wrappers for ControllerVision (WPILib), PhotonVision, and LimelightVision.
+## Architecture
 
-Three example uses of Vision using different targeting strategies are included as commands:
-1. Turn the robot to a target and drive to a specified distance from the target (yaw and pitch of the robot
- wrt the AprilTag)
-2. Drive the robot to a specified field position (3-D pose of the robot in the field)
-  This (swerve) drive command is presented in two forms:
+`VisionContainer` wraps three vision system implementations:
+- `ControllerVision` (WPILib) - Free, requires only WPILib
+- `PhotonVision` - Free, coprocessor recommended
+- `LimelightVision` - Commercial hardware
 
-    a. use of three PID controllers to achieve the target position goal with a stub drivetrain receiving the motor commands
+## Example Commands
 
-    b. proposed, but untested as packaged herein, PathPlanner on the fly command to drive to position
+Three targeting strategies are implemented:
 
-3. Drive the robot to a specified position relative to the target (Transform3d). This is similar to example #2 but instead of
-using field coordinates it uses a displacement from a target.
+### 1. Turn and Drive to Distance
+Turn to target and drive to specified distance using yaw/pitch relative to AprilTag.
 
-These example commands are limited to aligning with a single selected target near FRC 2025 ReefScape reef AprilTag #10. Teams
-provide their own game specific targeting code.
+### 2. Drive to Field Position
+Drive to a 3D field pose. Two implementations:
+- **PID-based**: Three PID controllers with stub drivetrain
+- **PathPlanner**: On-the-fly command (untested in this package)
 
-Completed team code should include the robot drivetrain, odometry and a gyro is extremely useful for pose accuracy and
-drivability of the robot.
+### 3. Drive to Target-Relative Position
+Drive to position relative to target using `Transform3d` instead of field coordinates.
 
-PID and timeout parameters must be tuned for each robot/drivetrain. Examples are for the hand-driven camera.
+> [!NOTE]
+> Examples target AprilTag #10 (FRC 2025 ReefScape). You'll need to write your own game-specific targeting code.
 
-Read the comments at the top of Robot.java and the comments for setting up the three vision systems in their respective classes.
+## Setup
 
-This project runs for all three vision systems in simulation mode or on a roboRIO v1.
+Read the comments in [Robot.java](src/main/java/frc/robot/Robot.java) and each vision system wrapper class for configuration details.
 
-The only requirements to run this minimal example in simulation mode (without a roboRIO) are a DriverStation PC and camera. (A
-LimelightVision device must be purchased to use that device and then some method must be devised to connect the PC and the LL to
-the same network.) The WPILib AprilTag and pose calculations are included or the free of charge PhotonVision may be downloaded
-and simply run on the PC. A real roboRIO v1 may be used for running on a real robot.
+**Required:**
+- Your drivetrain implementation
+- Odometry
+- Gyro (strongly recommended for pose accuracy)
 
-An XBox controller is assumed but that can be easily changed; any digital inputs or other schemes can be used to trigger the
-alignment commands.
+**Defaults:**
+- AprilTag #10 (change in code or print tag #10)
+- Xbox controller (easily changed to other inputs)
 
-An AprilTag #10 is assumed. Either change the number in the code or print or display on a screen the tag to be detected.
+> [!WARNING]
+> Tune PID and timeout parameters for your specific robot. Current values are for hand-driven camera testing.
 
-For 3-D pose calculations the camera must have its calibration data for accuracy. Guesstimates are fine for rough experimentation.
+## Hardware Requirements
 
-A purchased LimelightVision device may be used. A purchased co-processor for PhotonVision may be used.
+**Minimum (simulation):**
+- DriverStation PC
+- USB camera (~$50)
 
-For competitive use of the WPILib vision, a roboRIO v1 may be used only for turn to an angle targeting (3-D works but little time
-remains for other processes). A roboRIO v2 is required for competitive use of the WPILib 3-D pose.
+**For 3D pose calculations:**
+- Camera calibration data (required for accuracy, estimates work for testing)
 
-A recommended high quality, low cost vision system is free-of-charge PhotonVision on an inexpensive, recommended coprocessor. The
-high quality LimelightVision is preferred by many teams for its simplicity but it costs more.
+**roboRIO v1:**
+- Turn-to-angle targeting works well
+- 3D pose works but minimal CPU left for other processes
+
+**roboRIO v2:**
+- Required for competitive WPILib 3D pose usage
+
+## Vision System Options
+
+| System | Cost | Hardware |
+|--------|------|----------|
+| WPILib ControllerVision | Free | USB camera only |
+| PhotonVision | Free | USB camera + coprocessor (recommended) |
+| LimelightVision | Purchase required | All-in-one device |
+
+PhotonVision on a coprocessor offers good quality at low cost. LimelightVision is simpler to set up but more expensive.
+
+## Running
+
+Simulation mode works with all three vision systems on roboRIO v1.
+
+> [!NOTE]
+> LimelightVision in simulation requires connecting your PC and Limelight to the same network.
