@@ -1,4 +1,4 @@
-package frc.robot;
+package frc.robot.vision;
 
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;

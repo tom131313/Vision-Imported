@@ -13,8 +13,14 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.VisionContainer.VisionSelector;
-import frc.robot.CommandSchedulerLog.LogsSelector;
+import frc.robot.commands.AlignToReefFieldRelativePose3D;
+import frc.robot.commands.AlignToReefTagRelativeArcade2D;
+import frc.robot.commands.AlignToReefTargetRelativeTransform3D;
+import frc.robot.subsystems.Drivetrain;
+import frc.robot.utils.CommandSchedulerLog;
+import frc.robot.utils.CommandSchedulerLog.LogsSelector;
+import frc.robot.vision.VisionContainer;
+import frc.robot.vision.VisionContainer.VisionSelector;
 
 /**
  * {@link Robot} gets you here and this starts the fan-out to everything and everywhere else

@@ -1,4 +1,4 @@
-package frc.robot;
+package frc.robot.utils;
 
 /**
  * <pre>
@@ -59,7 +59,7 @@ may be easily turned off.
 Copyright 2010 - 2020, Greg Stanley
  * </pre>
  */
-class SpikeFilter {
+public class SpikeFilter {
     private double Mabsolute; // max absolute difference between 2 values
     private double Mratio; // max absolute ratio of difference between 2 values / previous value
     private int n; // 0 is off; suggest 1 or maybe rarely 2

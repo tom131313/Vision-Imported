@@ -1,4 +1,4 @@
-package frc.robot;
+package frc.robot.vision;
 
 import static edu.wpi.first.units.Units.Milliseconds;
 import static edu.wpi.first.units.Units.Seconds;
@@ -14,6 +14,9 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
+import frc.robot.Robot;
+import frc.robot.RobotContainer;
+import frc.robot.subsystems.Drivetrain;
 
 /**
  * This class is a wrapper for the three vision classes {@link ControllerVision}, {@link

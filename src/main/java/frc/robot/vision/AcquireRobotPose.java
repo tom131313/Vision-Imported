@@ -1,4 +1,4 @@
-package frc.robot;
+package frc.robot.vision;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +34,8 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.Image.AcquisitionTime;
+import frc.robot.utils.SpikeFilter;
+import frc.robot.vision.Image.AcquisitionTime;
 
 /**
  * Pose estimation using WPILib math on previously detected AprilTags (see {@link AcquireAprilTag})

@@ -1,4 +1,4 @@
-package frc.robot;
+package frc.robot.vision;
 
 import static edu.wpi.first.units.Units.Milliseconds;
 import static edu.wpi.first.units.Units.Seconds;
@@ -20,7 +20,10 @@ import edu.wpi.first.networktables.TimestampedDoubleArray;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
-import frc.robot.LimelightHelpers.PoseEstimate;
+import frc.robot.Robot;
+import frc.robot.RobotContainer;
+import frc.robot.subsystems.Drivetrain;
+import frc.robot.vision.LimelightHelpers.PoseEstimate;
 
 /**
  * Limelight requires significant setup using the dashboard and, somewhat, code can be used.

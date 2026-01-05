@@ -4,6 +4,10 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.commands.AlignToReefFieldRelativePose3D;
+import frc.robot.commands.AlignToReefTagRelativeArcade2D;
+import frc.robot.commands.AlignToReefTargetRelativeTransform3D;
+import frc.robot.vision.VisionContainer;
 
 /**
  * <p>
