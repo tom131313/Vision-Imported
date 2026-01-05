@@ -16,7 +16,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
-import frc.robot.subsystems.Drivetrain;
 
 /**
  * This class is a wrapper for the three vision classes {@link ControllerVision}, {@link
@@ -64,7 +63,11 @@ import frc.robot.subsystems.Drivetrain;
  */
 public class VisionContainer {
     static {
-        System.out.println("Loading: " + java.lang.invoke.MethodHandles.lookup().lookupClass().getCanonicalName()); // optional show class has started
+        System.out.println("Loading: " + java.lang.invoke.MethodHandles.lookup().lookupClass().getCanonicalName()); // optional
+                                                                                                                    // show
+                                                                                                                    // class
+                                                                                                                    // has
+                                                                                                                    // started
 
         System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME); // OpenCV required for all Vision Processes
 
@@ -117,7 +120,8 @@ public class VisionContainer {
                  * 
                  * Enter the camera location wrt the robot. Example camera mounted facing
                  * forward (zero radians yaw), half meter forward of center, quarter meter up from center,
-                 * zero meters left of center, pitch pointing up 25 degrees. (camera pointing up is "-""; down is "+"")
+                 * zero meters left of center, pitch pointing up 25 degrees. (camera pointing up is
+                 * "-""; down is "+"")
                  * 
                  * If in Simulation mode on a Windows PC, usually this is correct for camera id:
                  * If the external USB camera is plugged in at (before) boot-up time,
@@ -126,7 +130,8 @@ public class VisionContainer {
                  * external camera is plugged in after boot-up, then the cameraDeviceId = 1.
                  */
 
-                var cameraDeviceId = 0; // 1; if only one camera, it doesn't matter which physical USB port is used - both are 0
+                var cameraDeviceId = 0; // 1; if only one camera, it doesn't matter which physical USB port is used -
+                                        // both are 0
                 if (ControllerVision.isAvailable(cameraDeviceId)) {
                     boolean usePose3D = true;
                     var robotToCameraCV = new Transform3d(new Translation3d(0.5, 0.0, 0.25),
@@ -159,7 +164,8 @@ public class VisionContainer {
                  * 
                  * Enter the camera location wrt the robot. Example camera mounted facing
                  * forward (zero radians yaw), half meter forward of center, quarter meter up from center,
-                 * zero meters left of center, pitch pointing up 25 degrees. (camera pointing up is "-""; down is "+"")
+                 * zero meters left of center, pitch pointing up 25 degrees. (camera pointing up is
+                 * "-""; down is "+"")
                  */
 
                 var cameraName = "Microsoft_LifeCam_HD-3000"; // "Arducam_OV9281_USB_Camera"
@@ -196,7 +202,8 @@ public class VisionContainer {
                         }
                     }
 
-                    photonVision.camera.getAllUnreadResults(); // force PV to issue no camera by that name but there are other PV cameras
+                    photonVision.camera.getAllUnreadResults(); // force PV to issue no camera by that name but there are
+                                                               // other PV cameras
 
                     if (Robot.isSimulation()) {
                         System.out.println(
@@ -238,13 +245,21 @@ public class VisionContainer {
                 var limelightName = "limelight";
                 if (LimelightVision.isAvailable(limelightName)) {
                     limelightVision = new LimelightVision(limelightName, RobotContainer.getDrivetrain());
-                    var c = LimelightHelpers.getCameraPose3d_RobotSpace(limelightName); // retrieve camera position in LL
+                    var c = LimelightHelpers.getCameraPose3d_RobotSpace(limelightName); // retrieve camera position in
+                                                                                        // LL
                     var robotToCameraLL = new Transform3d(c.getTranslation(),
-                            new Rotation3d(c.getRotation().getX(), -c.getRotation().getY(), c.getRotation().getZ())); // - pitch to match CV & PV
+                            new Rotation3d(c.getRotation().getX(), -c.getRotation().getY(), c.getRotation().getZ())); // -
+                                                                                                                      // pitch
+                                                                                                                      // to
+                                                                                                                      // match
+                                                                                                                      // CV
+                                                                                                                      // &
+                                                                                                                      // PV
                     robotToCamera = robotToCameraLL;
                     vision = true;
                     // put additional LL setup as needed
-                    // LimelightHelpers.setStreamMode_PiPSecondary(limelightName); // if there is a driver camera, where to put the image - pick your favorite
+                    // LimelightHelpers.setStreamMode_PiPSecondary(limelightName); // if there is a driver camera, where
+                    // to put the image - pick your favorite
                 } else {
                     DriverStation.reportWarning("No LimelightVision connection", false);
 
@@ -298,7 +313,8 @@ public class VisionContainer {
                             photonVision.getTX(), photonVision.getTY(),
                             photonVision.getPose3d(),
                             photonVision.getCameraToTarget())));
-                    // System.out.println("PV " + photonVision.getTagID() + ", " + photonVision.getTX() + ", " + photonVision.getTY() + ", " + photonVision.getPose3d());
+                    // System.out.println("PV " + photonVision.getTagID() + ", " + photonVision.getTX() + ", " +
+                    // photonVision.getTY() + ", " + photonVision.getPose3d());
                 } else {
                     robotPose.set(Optional.empty());
                 }
@@ -315,7 +331,8 @@ public class VisionContainer {
                             limelightVision.getCameraToTarget())));
                     // System.out.println((limelightVision.getSuggestResetOdometry() ?
                     // "reset odometry pose " : "addVisionMeasurement pose ") +
-                    // limelightVision.getPose2d() + (limelightVision.isMegaTag2() ? " MegaTag2 pose" : " MegaTag pose"));
+                    // limelightVision.getPose2d() + (limelightVision.isMegaTag2() ? " MegaTag2 pose" : " MegaTag
+                    // pose"));
                 } else {
                     robotPose.set(Optional.empty());
                 }
