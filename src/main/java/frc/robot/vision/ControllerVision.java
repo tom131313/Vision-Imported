@@ -16,6 +16,9 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.wpilibj.DriverStation;
+import frc.robot.Constants.VisionConstants;
+import frc.robot.Constants.VisionConstants.CameraCalibration;
 
 /**
  * This is a demo program showing the detection of AprilTags and robot pose calculation using
@@ -131,7 +134,10 @@ public class ControllerVision extends CameraBase implements Runnable {
                 break;
 
             default:
-                System.out.println("impossible unless the enum is wrong");
+                // Raise a driver station warning that camera option is invalid
+                DriverStation.reportWarning("Invalid camera option selected in ControllerVision constructor, got: "
+                        + selectedCameraOption.toString(),
+                        true);
                 break;
         }
 
@@ -184,8 +190,27 @@ public class ControllerVision extends CameraBase implements Runnable {
         // poses.forEach(pose -> System.out.println("CV " + pose)); // show all available data
 
         if (isFresh()) {
-            // FIXME determine best target in the list; dummy filter - arbitrarily pick the lowest number; this needs work
+            // Select the pose with the closest distance to the camera
+            // Closer tags generally provide more accurate pose estimates with less jitter
             bestPoseIndex = 0;
+            double minDistance = Double.MAX_VALUE;
+
+            for (int i = 0; i < getPoses().size(); i++) {
+                RobotPose pose = getPoses().get(i);
+                // Calculate distance from camera to target (Euclidean distance in 3D space)
+                Transform3d transform = pose.cameraToTarget;
+                double distance = Math.sqrt(
+                    Math.pow(transform.getX(), 2) +
+                    Math.pow(transform.getY(), 2) +
+                    Math.pow(transform.getZ(), 2)
+                );
+
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    bestPoseIndex = i;
+                }
+            }
+
             bestPose = getPoses().get(bestPoseIndex).clone();
         }
     }
@@ -261,63 +286,41 @@ public class ControllerVision extends CameraBase implements Runnable {
     }
 
     private void ArduCam320x240() {
-        // rough calibration - wasn't done with a nice flat board
-        cameraW = 320;
-        cameraH = 240;
-        fps = 100;
-        cameraFx = 273.8682279422785;
-        cameraFy = 274.2578211409246;
-        cameraCx = 142.187975375679;
-        cameraCy = 124.6151823259089;
-        distortionCoeffs = new MatOfDouble();
-        // much of the small amount of distortion from calibration was actually the board
-        // not being smooth so don't bother using the distortion
-        // [0.03872533667096114, -0.2121025605447465, 0.00334472765894009, -0.006080540135581289, 0.4001779842036727]
+        applyCameraCalibration(VisionConstants.ARDUCAM_320x240);
     }
 
     private void ArduCam1280x240() {
-        // Arducam_OV9281_USB_Camera_(A?); Cameron board 1280x800
-        cameraW = 1280;
-        cameraH = 800;
-        fps = 100;
-        cameraFx = 907.6920444758049;
-        cameraFy = 907.1513951038395;
-        cameraCx = 604.1750223777503;
-        cameraCy = 416.4609913313957;
-        distortionCoeffs = new MatOfDouble(
-                0.040354289830866516, -0.044066115475547216, 6.662818829158613E-4, 9.755603732755772E-4, // k1 k2 p1 p2
-                -0.013630390510289322, // k3
-                -0.0011985508423857224, 0.003370423168524356, 0.0010337869630847195); // k4 k5 k6
-        // assume s1 s2 s3 s4 tx ty are all zeros
+        applyCameraCalibration(VisionConstants.ARDUCAM_1280x800);
     }
 
     private void LifeCam320x240() {
-        // 320x240 lifecam calibration from PhotonVision
-        cameraW = 320;
-        cameraH = 240;
-        fps = 30;
-        cameraFx = 353.74653217742724;
-        cameraFy = 340.77624878700817;
-        cameraCx = 163.5540798921191;
-        cameraCy = 119.8945718300403;
-        distortionCoeffs = new MatOfDouble();
+        applyCameraCalibration(VisionConstants.LIFECAM_320x240);
     }
 
     private void LifeCam640x480() {
-        // 640x480 lifecam calibration from WPILib example
-        // and https://www.chiefdelphi.com/t/wpilib-apriltagdetector-sample-code/421411/21
-        cameraW = 640;
-        cameraH = 480;
-        fps = 30;
-        cameraFx = 699.3778103158814;
-        cameraFy = 677.7161226393544;
-        cameraCx = 345.6059345433618;
-        cameraCy = 207.12741326228522;
-        distortionCoeffs = new MatOfDouble();
+        applyCameraCalibration(VisionConstants.LIFECAM_640x480);
+    }
+
+    /**
+     * Apply camera calibration data to this vision controller
+     *
+     * @param calibration the camera calibration to apply
+     */
+    private void applyCameraCalibration(CameraCalibration calibration) {
+        cameraW = calibration.width;
+        cameraH = calibration.height;
+        fps = calibration.fps;
+        cameraFx = calibration.fx;
+        cameraFy = calibration.fy;
+        cameraCx = calibration.cx;
+        cameraCy = calibration.cy;
+        distortionCoeffs = calibration.distortionCoeffs;
     }
 }
 // opencv tutorial example
-// https://www.wolframalpha.com/input/?i=plot (1 + -4.1802327176423804e-001 Power[\(40)Divide[r,6.5746697944293521e+002]\(41),2] + 5.0715244063187526e-001
-// Power[\(40)Divide[r,6.5746697944293521e+002]\(41),4] + -5.7843597214487474e-001*Power[\(40)Divide[r,6.5746697944293521e+002]\(41),6])
+// https://www.wolframalpha.com/input/?i=plot (1 + -4.1802327176423804e-001
+// Power[\(40)Divide[r,6.5746697944293521e+002]\(41),2] + 5.0715244063187526e-001
+// Power[\(40)Divide[r,6.5746697944293521e+002]\(41),4] +
+// -5.7843597214487474e-001*Power[\(40)Divide[r,6.5746697944293521e+002]\(41),6])
 // all times r
 // for r from 0 to 400
