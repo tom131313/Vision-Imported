@@ -45,19 +45,20 @@ Read the comments in [Robot.java](src/main/java/frc/robot/Robot.java) and each v
 
 ## Hardware Requirements
 
-**Minimum (simulation):**
+**Minimum (simulation/testing):**
 - DriverStation PC
 - USB camera (~$50)
 
-**For 3D pose calculations:**
-- Camera calibration data (required for accuracy, estimates work for testing)
+**For competition:**
+- Camera with calibration data
+- Dedicated coprocessor for vision processing (strongly recommended)
 
-**roboRIO v1:**
-- Turn-to-angle targeting works well
-- 3D pose works but minimal CPU left for other processes
+> [!WARNING]
+> Running OpenCV directly on the roboRIO (v1 or v2) is discouraged due to substantial CPU and timing tradeoffs. Vision processing should be offloaded to a dedicated coprocessor.
 
-**roboRIO v2:**
-- Required for competitive WPILib 3D pose usage
+**roboRIO capabilities (if running vision on-RIO):**
+- **v1:** Turn-to-angle targeting only; 3D pose consumes nearly all CPU
+- **v2:** Can handle 3D pose but still limited for competitive use
 
 ## Vision System Options
 
