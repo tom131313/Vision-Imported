@@ -1,26 +1,21 @@
 package frc.robot;
 
-import java.util.EnumSet;
-
 import edu.wpi.first.wpilibj.DataLogManager;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Config.CommandLoggingSettings;
 import frc.robot.commands.AlignToReefFieldRelativePose3D;
 import frc.robot.commands.AlignToReefTagRelativeArcade2D;
 import frc.robot.commands.AlignToReefTargetRelativeTransform3D;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.utils.CommandSchedulerLog;
-import frc.robot.utils.CommandSchedulerLog.CommandStageSelector;
-import frc.robot.utils.CommandSchedulerLog.LogsSelector;
 import frc.robot.vision.VisionContainer;
-import frc.robot.vision.VisionContainer.VisionSelector;
 
 /**
  * {@link Robot} gets you here and this starts the fan-out to everything and everywhere else
  */
-public class RobotContainer {
+public class RobotContainer  {
     static {
         System.out.println("Loading: " + java.lang.invoke.MethodHandles.lookup().lookupClass().getCanonicalName());
     }
@@ -28,20 +23,17 @@ public class RobotContainer {
     private static Drivetrain drivetrain = new Drivetrain();
     private static VisionContainer visionContainer;
 
-    private static final CommandXboxController driverController = new CommandXboxController(0);
+    private static final CommandXboxController driverController =
+        new CommandXboxController(Constants.driverController);
 
     public RobotContainer() {
 
         configDataLog();
 
-        // FIXME select command logging options
-        new CommandSchedulerLog(EnumSet.allOf(CommandStageSelector.class),
-                EnumSet.of(LogsSelector.useConsole, LogsSelector.useDataLog));
+        new CommandSchedulerLog(CommandLoggingSettings.commandStageSelector,
+                CommandLoggingSettings.logSelector);
 
-        // FIXME use VisionSelector to choose which of the vision systems to use
-        var visionSelector = VisionSelector.usePhotonVision;
-        DriverStation.reportWarning("vision selection " + visionSelector, false);
-        visionContainer = new VisionContainer(visionSelector);
+        visionContainer = new VisionContainer();
 
         configAButton();
         configBButton();

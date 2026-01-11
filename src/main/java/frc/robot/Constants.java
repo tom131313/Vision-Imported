@@ -6,12 +6,21 @@ import org.opencv.core.MatOfDouble;
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
  * constants. This class should not be used for any other purpose. All constants should be declared
  * globally (i.e. public static). Do not put anything functional in this class.
- *
+ * <p>
+ * Variables that are considered user settable to configure a particular use should be set in the
+ * {@link Config} interface.
  * <p>
  * It is advised to statically import this class (or one of its inner classes) wherever the
  * constants are needed, to reduce verbosity.
+ * <p>
+ * There are a few user settable constants scattered around this project especially in
+ * {@link AcquireAprilTag}. These likely will not be changed and aren't in {@link Config} or
+ * {@link Constants}.
  */
 public final class Constants {
+
+    // Xbox controller port used to initiate alignment commands
+    public static final int driverController = 0;
 
     /**
      * Vision constants for camera calibration and configuration

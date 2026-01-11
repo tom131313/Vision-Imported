@@ -2,6 +2,7 @@ package frc.robot.vision;
 
 import static edu.wpi.first.units.Units.Milliseconds;
 import static edu.wpi.first.units.Units.Seconds;
+import static frc.robot.utils.Network.getMyIPAddress;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -14,13 +15,12 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
+import static frc.robot.Config.VisionSettings;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.commands.AlignToReefFieldRelativePose3D;
 import frc.robot.commands.AlignToReefTagRelativeArcade2D;
 import frc.robot.commands.AlignToReefTargetRelativeTransform3D;
-import static frc.robot.utils.Network.getMyIPAddress;
-import static frc.robot.Constants.Vision.Camera;
 
 /**
  * This class is a wrapper for the three vision classes {@link ControllerVision}, {@link
@@ -34,18 +34,16 @@ import static frc.robot.Constants.Vision.Camera;
  * <p>
  * LimelightVision returns team specified filtered selection from MegaTag or MegaTag2.
  * (This is a reasonable default but could use more tuning. See {@link LimelightVision#update()})
- * 
  * <p>
- * After selecting and configuring the desired vision system, use the robot pose as in example
- * commands {@link AlignToReefFieldRelativePose3D}, {@link AlignToReefTargetRelativeTransform3D}
- * and {@link AlignToReefTagRelativeArcade2D}
- * 
+ * After selecting and configuring the desired vision system {@link Config}, use the
+ * robot pose as in example commands {@link AlignToReefFieldRelativePose3D},
+ * {@link AlignToReefTargetRelativeTransform3D} and {@link AlignToReefTagRelativeArcade2D}
  * <p>
  * Getters are available for each of the three vision systems. This allows use of other low level
  * methods that may be available within the systems' classes. That also helps reveal the following
  * getters which are duplicative with the RobotPose class data so there is no reason to use them.
  * <p>
- * Each vision system extends CameraBase which provides for
+ * Each vision system extends {@link CameraBase} which provides for
  * 
  * <pre>
  * <code>
@@ -83,67 +81,29 @@ public class VisionContainer {
         useControllerVision, usePhotonVision, useLimelightVision
     }
 
-    private VisionSelector visionSelector;
+    private VisionSelector visionSelector = VisionSettings.visionSelector;
 
     private ControllerVision controllerVision = null; // only for Controller (roboRIO)
     private PhotonVision photonVision = null; // only for PV
     private LimelightVision limelightVision = null; // only for LL
-    private AtomicReference<Optional<RobotPose>> robotPose = new AtomicReference<Optional<RobotPose>>(Optional.empty());
+    private AtomicReference<Optional<RobotPose>> robotPose =
+        new AtomicReference<Optional<RobotPose>>(Optional.empty());
     private Transform3d robotToCamera;
     private boolean vision = false; // initially not activated
 
-    public VisionContainer(VisionSelector visionSelector) {
-        this.visionSelector = visionSelector;
+    public VisionContainer() {
+
+        DriverStation.reportWarning("vision selection " + visionSelector, false);
 
         switch (visionSelector) {
             case useControllerVision:
-                /*
-                 * Select the camera model and resolution from the list of cameras
-                 * that have calibration data.
-                 * 
-                 * Select if the Pose3D calculation is to be performed.
-                 * 
-                 * Enter the 3-D translation (location) of your camera wrt the bottom, center of
-                 * the robot.
-                 * 
-                 * Caution: roboRIO v1 has constrained memory and cpu.
-                 * 
-                 * For v1 use camera resolution about 320x240 maybe a little higher.
-                 * Experiment with your team usage.
-                 * 
-                 * "usePose3D" determines if the time consuming calculation for 3-D pose is
-                 * performed. If this setting is "false", then only the pitch and yaw of the robot
-                 * wrt the AprilTag is available and can they can be used for what LimeLight
-                 * describes as "servoing" mode. Note that the Pose3d is still "available" but it's
-                 * value is zero (origin; not useful). roboRIO v1 can do Pose3D but little time is
-                 * left for other processes. v1 memory limits AprilTag bitsCorrected to 1 error bit
-                 * (up to 2 on roboRIO v2)
-                 * 
-                 * Select the camera device id.
-                 * 
-                 * For real roboRIO, if only one camera, it doesn't matter which physical USB port
-                 * is used - both are 0.
-                 * 
-                 * If in Simulation mode on a Windows PC, usually this is correct for camera id:
-                 * If the external USB camera is plugged in at (before) boot-up time,
-                 * then it is cameraDeviceId = 0 after booting.
-                 * If the PC has an internal camera (common with laptops) and the
-                 * external camera is plugged in after boot-up, then the cameraDeviceId = 1.
-                 * 
-                 * Enter the camera location wrt the robot. Example camera mounted facing
-                 * forward (zero radians yaw), half meter forward of center, quarter meter up from
-                 * center, zero meters left of center, pitch pointing up 25 degrees.
-                 * (camera pointing up is "-""; down is "+"").
-                 */
-                // FIXME need camera ID, camera option, and camera mount
-                var cameraDeviceId = 0;
+                var cameraDeviceId = VisionSettings.cameraDeviceId;
                 if (ControllerVision.isAvailable(cameraDeviceId)) {
-                    boolean usePose3D = true;
                     var robotToCameraCV = new Transform3d(new Translation3d(0.5, 0.0, 0.25),
                             new Rotation3d(0, Units.degreesToRadians(-25.), 0));
                     robotToCamera = robotToCameraCV;
                     controllerVision = new ControllerVision(cameraDeviceId,
-                            Camera.ARDUCAM_320x240, usePose3D, robotToCameraCV);
+                            VisionSettings.camera, VisionSettings.usePose3D, robotToCameraCV);
 
                     // vision runs as a "background" thread to minimize interference with the other
                     // robot actions. This may increase latency. Priority could be experimented with.
@@ -164,18 +124,8 @@ public class VisionContainer {
                 break;
 
             case usePhotonVision:
-                /*
-                 * Select the camera name
-                 * 
-                 * Enter the camera location wrt the robot. Example camera mounted facing
-                 * forward (zero radians yaw), half meter forward of center, quarter meter up from center,
-                 * zero meters left of center, pitch pointing up 25 degrees. (camera pointing up is "-""; down is "+"")
-                 */
-                // FIXME select the camera name set in PV dashboard and camera mount
-                var cameraName = "Microsoft_LifeCam_HD-3000"; // "Arducam_OV9281_USB_Camera"
-                var pitch = Units.degreesToRadians(-25.);
-                var robotToCameraPV = new Transform3d(new Translation3d(0.5, 0.0, 0.25),
-                        new Rotation3d(0, pitch, 0));
+                var cameraNamePV = VisionSettings.cameraNamePV;
+                var robotToCameraPV = VisionSettings.robotToCameraPV;
                 robotToCamera = robotToCameraPV;
 
                 // PV started connecting when the NT server started but still it's a race to make
@@ -186,7 +136,7 @@ public class VisionContainer {
                     e.printStackTrace();
                 }
 
-                photonVision = new PhotonVision(cameraName, robotToCameraPV);
+                photonVision = new PhotonVision(cameraNamePV, robotToCameraPV);
 
                 final var retryDelay = Seconds.of(1);
                 final var retryLimit = 20;
@@ -198,7 +148,7 @@ public class VisionContainer {
                             break checkConnection;
                         }
                         System.out.println("attempt " + i + " of " + retryLimit + " to attach to PhotonVision named "
-                                + cameraName);
+                                + cameraNamePV);
                         try {
                             Thread.sleep((long) retryDelay.in(Milliseconds));
                         } catch (InterruptedException e) {
@@ -235,17 +185,9 @@ public class VisionContainer {
 
             case useLimelightVision:
                 /*
-                 * Caution: Limelight pitch setup has the opposite sign of PhotonVision and ControllerVision
-                 * LL positive pitch is pointing up
-                 * Snap Robot to Floor is only for MegaTag; MegaTag2 always snaps to floor.
-                 * Further than about 1.1m away from tag, MegaTag tends to have a lot of jitter especially in
-                 * the z (height) axis.
-                 * 
                  * Add additional Limelight setups as indicated below
                  */
-
-                // FIXME Select the limelight name that is set in the Limelight box through its dashboard
-                var limelightName = "limelight";
+                var limelightName = VisionSettings.limelightName;
                 if (LimelightVision.isAvailable(limelightName)) {
                     limelightVision = new LimelightVision(limelightName, RobotContainer.getDrivetrain());
                     var c = LimelightHelpers.getCameraPose3d_RobotSpace(limelightName); // retrieve camera position in LL
